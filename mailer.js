@@ -1,32 +1,45 @@
-const { Resend } = require("resend");
-const resend = new Resend(process.env.RESEND_API_KEY);
+const nodemailer = require("nodemailer");
 
-// ─── IMPORTANT ───────────────────────────────────────────────────────────────
-// The FROM address MUST be a domain you have verified in your Resend dashboard.
-// Steps:
-//   1. Go to https://resend.com/domains  →  Add Domain
-//   2. Add your domain (e.g. mentorise.com) and add the DNS records shown.
-//   3. Replace "noreply@yourdomain.com" below with your verified address.
-//
-// ⚠️  Using "onboarding@resend.dev" only works for YOUR OWN Resend account email.
-//     Every other recipient is silently dropped — this is the #1 reason OTPs never arrive.
+// ─── Gmail Transporter ────────────────────────────────────────────────────────
+// Uses Gmail App Password (NOT your regular Gmail password).
+// Steps to get an App Password:
+//   1. Enable 2-Step Verification on your Google account
+//   2. Go to: https://myaccount.google.com/apppasswords
+//   3. Create a new app password → copy the 16-char code
+//   4. Set these in Render environment variables:
+//      GMAIL_USER = mentorise.platform@gmail.com
+//      GMAIL_PASS = your-16-char-app-password
 // ─────────────────────────────────────────────────────────────────────────────
-const FROM_ADDRESS = process.env.MAIL_FROM || "Mentorise <noreply@yourdomain.com>";
+const transporter = nodemailer.createTransport({
+  service: "gmail",
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASS,
+  },
+});
+
+// Verify transporter connection on startup (logs success/failure in Render logs)
+transporter.verify((error, success) => {
+  if (error) {
+    console.error("Gmail transporter error:", error.message);
+  } else {
+    console.log("Gmail transporter ready ✅");
+  }
+});
 
 // ─── Generic send mail function ──────────────────────────────────────────────
 const sendMail = async ({ to, subject, html }) => {
   try {
-    const result = await resend.emails.send({
-      from: FROM_ADDRESS,
+    const info = await transporter.sendMail({
+      from: `"Mentorise" <${process.env.GMAIL_USER}>`,
       to,
       subject,
       html,
     });
-    console.log(`Email sent to ${to} | id: ${result?.id}`);
+    console.log(`Email sent to ${to} | messageId: ${info.messageId}`);
     return true;
   } catch (err) {
-    // Log the full error so you can see it in Render logs
-    console.error("Email error:", err);
+    console.error("Email send error:", err.message);
     return false;
   }
 };
