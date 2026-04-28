@@ -20,9 +20,9 @@ const menteeSchema = new mongoose.Schema(
     password:        { type: String, required: true },
     userType:        { type: String, default: "mentee" },
     img:             { type: String, default: "" },
-    college:         { type: String, default: "" },       // name="college"
-    yearOfStudy:     { type: String, default: "" },       // name="yearOfStudy"
-    areasOfInterest: { type: [String], default: [] },     // name="areasOfInterest" (checkboxes)
+    college:         { type: String, default: "" },
+    yearOfStudy:     { type: String, default: "" },
+    areasOfInterest: { type: [String], default: [] },
   },
   { timestamps: true }
 );
@@ -35,12 +35,12 @@ const mentorSchema = new mongoose.Schema(
     password:       { type: String, required: true },
     userType:       { type: String, default: "mentor" },
     img:            { type: String, default: "" },
-    currentRole:    { type: String, default: "" },        // name="currentRole"
-    field:          { type: String, default: "" },        // name="field"
-    experience:     { type: String, default: "" },        // name="experience"
-    about:          { type: String, default: "" },        // name="about"
-    linkedin:       { type: String, default: "" },        // name="linkedin"
-    mentoringAreas: { type: [String], default: [] },      // name="mentoringAreas" (checkboxes)
+    currentRole:    { type: String, default: "" },
+    field:          { type: String, default: "" },
+    experience:     { type: String, default: "" },
+    about:          { type: String, default: "" },
+    linkedin:       { type: String, default: "" },
+    mentoringAreas: { type: [String], default: [] },
   },
   { timestamps: true }
 );
@@ -62,45 +62,41 @@ const sessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ─── Message Schema ─────────────────────────────────────────────────────────
-// Stores individual messages within a chat conversation.
+// ─── Message Schema ──────────────────────────────────────────────────────────
 const messageSchema = new mongoose.Schema(
   {
-    chatId:     { type: String, required: true, index: true },   // matches Chat.chatId
-    senderId:   { type: String, required: true },                // ObjectId as string
+    chatId:     { type: String, required: true, index: true },
+    senderId:   { type: String, required: true },
     senderName: { type: String, required: true },
     senderType: { type: String, enum: ["mentor", "mentee"], required: true },
-    content:    { type: String, required: true },                // message text
-    read:       { type: Boolean, default: false },               // read receipt
+    content:    { type: String, required: true },
+    read:       { type: Boolean, default: false },
     readAt:     { type: Date, default: null },
   },
-  { timestamps: true }   // createdAt = message sent time
+  { timestamps: true }
 );
 
 // ─── Chat Schema ─────────────────────────────────────────────────────────────
-// One document per mentor-mentee pair; messages are stored in the Message collection.
 const chatSchema = new mongoose.Schema(
   {
-    chatId:       { type: String, required: true, unique: true },  // "<mentorId>_<menteeId>"
-    users:        [{ type: String }],                              // [mentorId, menteeId]
+    chatId:       { type: String, required: true, unique: true },
+    users:        [{ type: String }],
     mentor:       { id: String, name: String },
     mentee:       { id: String, name: String },
-    // Snapshot of the latest message for fast chat-list rendering
     lastMessage: {
       content:    { type: String, default: "" },
       senderId:   { type: String, default: "" },
       senderName: { type: String, default: "" },
       sentAt:     { type: Date,   default: null },
     },
-    unreadCountMentor: { type: Number, default: 0 },  // unread msgs for the mentor
-    unreadCountMentee: { type: Number, default: 0 },  // unread msgs for the mentee
+    unreadCountMentor: { type: Number, default: 0 },
+    unreadCountMentee: { type: Number, default: 0 },
     lastActivity:      { type: Date, default: Date.now },
   },
   { timestamps: true }
 );
 
-// ─── Review Schema ─────────────────────────────────────────────────────────
-// One review per (sessionId, menteeId) pair — submitted after a session ends.
+// ─── Review Schema ────────────────────────────────────────────────────────────
 const reviewSchema = new mongoose.Schema(
   {
     sessionId:   { type: mongoose.Schema.Types.ObjectId, ref: "Session", required: true, unique: true },
@@ -113,8 +109,7 @@ const reviewSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-// ─── GroupSession Schema ────────────────────────────────────────────────────
-// Allows one mentor to host multiple mentees in a single video room.
+// ─── GroupSession Schema ──────────────────────────────────────────────────────
 const groupSessionSchema = new mongoose.Schema(
   {
     mentorId:    { type: mongoose.Schema.Types.ObjectId, ref: "Mentor", required: true },
@@ -124,7 +119,6 @@ const groupSessionSchema = new mongoose.Schema(
     date:        { type: String, required: true },
     time:        { type: String, required: true },
     maxMentees:  { type: Number, default: 10 },
-    // Array of { menteeId, menteeName, status: pending|accepted|rejected }
     participants: [
       {
         menteeId:   { type: mongoose.Schema.Types.ObjectId, ref: "Mentee" },
@@ -138,6 +132,22 @@ const groupSessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ─── OTP Schema ───────────────────────────────────────────────────────────────
+// Replaces in-memory Maps so OTPs survive Render restarts/spin-downs.
+// MongoDB automatically deletes documents when `expiresAt` is reached (TTL index).
+const otpSchema = new mongoose.Schema(
+  {
+    email:     { type: String, required: true, index: true },
+    otp:       { type: String, required: true },
+    type:      { type: String, enum: ["signup", "login"], required: true }, // distinguish signup vs login OTP
+    verified:  { type: Boolean, default: false },
+    expiresAt: { type: Date, required: true },   // TTL index below auto-deletes expired docs
+  },
+  { timestamps: true }
+);
+// TTL index: MongoDB removes the document automatically when expiresAt is reached
+otpSchema.index({ expiresAt: 1 }, { expireAfterSeconds: 0 });
+
 const Mentor       = mongoose.model("Mentor",        mentorSchema);
 const Mentee       = mongoose.model("Mentee",        menteeSchema);
 const Session      = mongoose.model("Session",       sessionSchema);
@@ -145,5 +155,6 @@ const Chat         = mongoose.model("Chat",          chatSchema);
 const Message      = mongoose.model("Message",       messageSchema);
 const Review       = mongoose.model("Review",        reviewSchema);
 const GroupSession = mongoose.model("GroupSession",  groupSessionSchema);
+const OTP          = mongoose.model("OTP",           otpSchema);
 
-module.exports = { connectDB, Mentor, Mentee, Session, Chat, Message, Review, GroupSession };
+module.exports = { connectDB, Mentor, Mentee, Session, Chat, Message, Review, GroupSession, OTP };

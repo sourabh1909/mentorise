@@ -7,7 +7,7 @@ const http = require("http");
 const socketIO = require("socket.io");
 const cookieParser = require("cookie-parser");
 
-const { connectDB, Mentor, Mentee, Session, Chat, Message, Review, GroupSession } = require("./db");
+const { connectDB, Mentor, Mentee, Session, Chat, Message, Review, GroupSession, OTP } = require("./db");
 const { signupUser, loginUser, requireAuth } = require("./auth");
 const { sendSessionAcceptedToMentee, sendSessionRejectedToMentee, sendOTPEmail, sendPasswordResetEmail, sendSessionReminderEmail } = require("./mailer");
 
@@ -18,11 +18,12 @@ const io = socketIO(server);
 
 connectDB();
 
+// ─── Session Reminder Cron ────────────────────────────────────────────────────
 setInterval(async () => {
   try {
     const now = new Date();
-    const windowStart = new Date(now.getTime() + 29 * 60 * 1000); // 29 min from now
-    const windowEnd   = new Date(now.getTime() + 31 * 60 * 1000); // 31 min from now
+    const windowStart = new Date(now.getTime() + 29 * 60 * 1000);
+    const windowEnd   = new Date(now.getTime() + 31 * 60 * 1000);
 
     const upcomingSessions = await Session.find({
       status: "accepted",
@@ -32,7 +33,6 @@ setInterval(async () => {
     for (const session of upcomingSessions) {
       const sessionTime = new Date(`${session.date}T${session.time}`);
       if (sessionTime >= windowStart && sessionTime <= windowEnd) {
-        // Send to mentor
         const mentor = await Mentor.findById(session.mentorId).lean();
         if (mentor) {
           await sendSessionReminderEmail({
@@ -42,7 +42,6 @@ setInterval(async () => {
             sessionId: session._id.toString(), userId: mentor._id.toString(),
           });
         }
-        // Send to mentee
         const mentee = await Mentee.findById(session.menteeId).lean();
         if (mentee) {
           await sendSessionReminderEmail({
@@ -92,7 +91,7 @@ setInterval(async () => {
   }
 }, 60 * 1000);
 
-// ─── Middleware  ← MUST be before all routes
+// ─── Middleware ───────────────────────────────────────────────────────────────
 app.set("views", path.join(__dirname, "views"));
 app.set("view engine", "ejs");
 
@@ -105,29 +104,25 @@ server.listen(port, () => {
   console.log("Server started on port " + port);
 });
 
-// ─── Socket.IO ───────────────────────────────────────────────────────────────
+// ─── Socket.IO ────────────────────────────────────────────────────────────────
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
 
-  // ── Text Chat ─────────────────────────────────────────────────────────────
   socket.on("join-chat", ({ roomId, userName }) => {
     socket.join(roomId);
     console.log(`${userName} joined room: ${roomId}`);
   });
 
-  // Persist message to MongoDB, update Chat metadata, then broadcast
   socket.on("send-message", async ({ roomId, message, sender, senderName, senderType }) => {
     try {
-      // 1. Save message to DB
       const saved = await Message.create({
         chatId: roomId,
         senderId: sender,
         senderName,
-        senderType: senderType || "mentee", // fallback; client should always send this
+        senderType: senderType || "mentee",
         content: message,
       });
 
-      // 2. Update Chat document: lastMessage snapshot + unread counters
       const unreadIncrement = {};
       if (senderType === "mentor") {
         unreadIncrement.unreadCountMentee = 1;
@@ -149,7 +144,6 @@ io.on("connection", (socket) => {
         }
       );
 
-      // 3. Broadcast to room (include DB _id so clients can reference it)
       io.to(roomId).emit("receive-message", {
         _id: saved._id.toString(),
         message,
@@ -162,27 +156,22 @@ io.on("connection", (socket) => {
     }
   });
 
-  // Mark messages as read when a user opens/focuses the chat
   socket.on("mark-read", async ({ roomId, readerId, readerType }) => {
     try {
-      // Mark all unread messages NOT sent by the reader as read
       await Message.updateMany(
         { chatId: roomId, senderId: { $ne: readerId }, read: false },
         { read: true, readAt: new Date() }
       );
 
-      // Reset the relevant unread counter on the Chat document
       const counterField = readerType === "mentor" ? "unreadCountMentor" : "unreadCountMentee";
       await Chat.findOneAndUpdate({ chatId: roomId }, { [counterField]: 0 });
 
-      // Notify room so the other user can update their UI
       socket.to(roomId).emit("messages-read", { readerId });
     } catch (err) {
       console.error("mark-read error:", err.message);
     }
   });
 
-  // ── Video Call Signaling ──────────────────────────────────────────────────
   socket.on("join-video-room", ({ room, userId, userName }) => {
     socket.join(room);
     socket.data.videoRoom = room;
@@ -212,12 +201,11 @@ io.on("connection", (socket) => {
   });
 });
 
-
-
 // ─── In-Memory Password Reset Token Store ────────────────────────────────────
-const resetTokenStore = new Map(); // token -> { email, expiresAt }
+// Reset tokens are short-lived (15 min) and low-volume so in-memory is fine here.
+// For production resilience, migrate this to MongoDB similarly to OTPs below.
+const resetTokenStore = new Map();
 
-// POST /forgot-password — validate email, generate token, send reset email
 app.post("/forgot-password", async (req, res) => {
   try {
     const { email } = req.body;
@@ -226,9 +214,8 @@ app.post("/forgot-password", async (req, res) => {
     const user = (await Mentor.findOne({ email }).lean()) || (await Mentee.findOne({ email }).lean());
     if (!user) return res.status(400).json({ success: false, message: "No account found with this email." });
 
-    // Generate a secure random token
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
+    const expiresAt = Date.now() + 15 * 60 * 1000;
     resetTokenStore.set(token, { email, expiresAt });
 
     const resetLink = `${process.env.APP_URL || "https://mentorise-1.onrender.com"}/reset-password?token=${token}`;
@@ -241,7 +228,6 @@ app.post("/forgot-password", async (req, res) => {
   }
 });
 
-// GET /reset-password — serve the reset password page
 app.get("/reset-password", (req, res) => {
   const { token } = req.query;
   if (!token) return res.redirect("/login");
@@ -260,7 +246,6 @@ app.get("/reset-password", (req, res) => {
   res.render("reset-password", { token });
 });
 
-// POST /reset-password — update the user's password
 app.post("/reset-password", async (req, res) => {
   try {
     const { token, password } = req.body;
@@ -275,11 +260,10 @@ app.post("/reset-password", async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
     const { email } = record;
 
-    // Update in whichever collection the user belongs to
     const mentorUpdate = await Mentor.findOneAndUpdate({ email }, { password: hashedPassword });
     if (!mentorUpdate) await Mentee.findOneAndUpdate({ email }, { password: hashedPassword });
 
-    resetTokenStore.delete(token); // token is one-time use
+    resetTokenStore.delete(token);
     res.json({ success: true, message: "Password reset successfully!" });
   } catch (err) {
     console.error("Reset password error:", err);
@@ -287,50 +271,9 @@ app.post("/reset-password", async (req, res) => {
   }
 });
 
-// ─── In-Memory OTP Store (login)
-const loginOtpStore = new Map();
+// ─── OTP Routes (MongoDB-backed — survives Render restarts) ──────────────────
 
-// Send OTP for login (checks user exists first)
-app.post("/send-login-otp", async (req, res) => {
-  try {
-    const { email } = req.body;
-    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
-
-    const user = (await Mentor.findOne({ email }).lean()) || (await Mentee.findOne({ email }).lean());
-    if (!user) return res.status(400).json({ success: false, message: "No account found with this email." });
-
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000;
-    loginOtpStore.set(email, { otp, expiresAt });
-
-    await sendOTPEmail({ email, otp, firstName: user.firstName });
-
-    res.json({ success: true, message: "OTP sent to your email." });
-  } catch (error) {
-    console.error("Send login OTP error:", error);
-    res.status(500).json({ success: false, message: "Failed to send OTP." });
-  }
-});
-
-// Verify login OTP
-app.post("/verify-login-otp", (req, res) => {
-  const { email, otp } = req.body;
-  const record = loginOtpStore.get(email);
-
-  if (!record) return res.status(400).json({ success: false, message: "No OTP found. Please request a new one." });
-  if (Date.now() > record.expiresAt) {
-    loginOtpStore.delete(email);
-    return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
-  }
-  if (record.otp !== otp.trim()) return res.status(400).json({ success: false, message: "Incorrect OTP. Please try again." });
-
-  loginOtpStore.set(email, { ...record, verified: true });
-  res.json({ success: true, message: "OTP verified!" });
-});
-
-const otpStore = new Map();
-
-// ─── OTP Routes
+// ── Signup OTP ──────────────────────────────────────────────────────────────
 app.post("/send-otp", async (req, res) => {
   try {
     const { email, firstName } = req.body;
@@ -346,9 +289,14 @@ app.post("/send-otp", async (req, res) => {
     }
 
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = Date.now() + 10 * 60 * 1000;
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
 
-    otpStore.set(email, { otp, expiresAt, firstName });
+    // Upsert: replace any existing signup OTP for this email
+    await OTP.findOneAndUpdate(
+      { email, type: "signup" },
+      { otp, verified: false, expiresAt },
+      { upsert: true, new: true }
+    );
 
     await sendOTPEmail({ email, otp, firstName });
 
@@ -359,43 +307,99 @@ app.post("/send-otp", async (req, res) => {
   }
 });
 
-app.post("/verify-otp", (req, res) => {
-  const { email, otp } = req.body;
-  const record = otpStore.get(email);
+app.post("/verify-otp", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const record = await OTP.findOne({ email, type: "signup" });
 
-  if (!record) {
-    return res.status(400).json({ success: false, message: "No OTP found for this email. Please request a new one." });
-  }
-  if (Date.now() > record.expiresAt) {
-    otpStore.delete(email);
-    return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
-  }
-  if (record.otp !== otp.trim()) {
-    return res.status(400).json({ success: false, message: "Incorrect OTP. Please try again." });
-  }
+    if (!record) {
+      return res.status(400).json({ success: false, message: "No OTP found for this email. Please request a new one." });
+    }
+    if (new Date() > record.expiresAt) {
+      await OTP.deleteOne({ email, type: "signup" });
+      return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+    }
+    if (record.otp !== otp.trim()) {
+      return res.status(400).json({ success: false, message: "Incorrect OTP. Please try again." });
+    }
 
-  otpStore.set(email, { ...record, verified: true });
-  res.json({ success: true, message: "Email verified successfully!" });
+    await OTP.findOneAndUpdate({ email, type: "signup" }, { verified: true });
+    res.json({ success: true, message: "Email verified successfully!" });
+  } catch (error) {
+    console.error("Verify OTP error:", error);
+    res.status(500).json({ success: false, message: "Verification failed. Please try again." });
+  }
 });
 
+// ── Login OTP ───────────────────────────────────────────────────────────────
+app.post("/send-login-otp", async (req, res) => {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ success: false, message: "Email is required." });
 
-// ─── Page Routes
+    const user = (await Mentor.findOne({ email }).lean()) || (await Mentee.findOne({ email }).lean());
+    if (!user) return res.status(400).json({ success: false, message: "No account found with this email." });
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+
+    // Upsert: replace any existing login OTP for this email
+    await OTP.findOneAndUpdate(
+      { email, type: "login" },
+      { otp, verified: false, expiresAt },
+      { upsert: true, new: true }
+    );
+
+    await sendOTPEmail({ email, otp, firstName: user.firstName });
+
+    res.json({ success: true, message: "OTP sent to your email." });
+  } catch (error) {
+    console.error("Send login OTP error:", error);
+    res.status(500).json({ success: false, message: "Failed to send OTP." });
+  }
+});
+
+app.post("/verify-login-otp", async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+    const record = await OTP.findOne({ email, type: "login" });
+
+    if (!record) {
+      return res.status(400).json({ success: false, message: "No OTP found. Please request a new one." });
+    }
+    if (new Date() > record.expiresAt) {
+      await OTP.deleteOne({ email, type: "login" });
+      return res.status(400).json({ success: false, message: "OTP has expired. Please request a new one." });
+    }
+    if (record.otp !== otp.trim()) {
+      return res.status(400).json({ success: false, message: "Incorrect OTP. Please try again." });
+    }
+
+    await OTP.findOneAndUpdate({ email, type: "login" }, { verified: true });
+    res.json({ success: true, message: "OTP verified!" });
+  } catch (error) {
+    console.error("Verify login OTP error:", error);
+    res.status(500).json({ success: false, message: "Verification failed. Please try again." });
+  }
+});
+
+// ─── Page Routes ──────────────────────────────────────────────────────────────
 app.get("/", (req, res) => res.redirect("/home"));
 app.get("/home", (req, res) => res.sendFile(path.join(__dirname, "public", "index.html")));
 app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "public", "Login.html")));
 app.get("/signup", (req, res) => res.sendFile(path.join(__dirname, "public", "signup.html")));
 
-// ─── Auth Routes
+// ─── Auth Routes ──────────────────────────────────────────────────────────────
 app.post("/signup", async (req, res) => {
   const result_body = req.body;
 
   if (result_body.userType === "mentor" || result_body.userType === "mentee") {
     const email = result_body.email;
-    const record = otpStore.get(email);
+    const record = await OTP.findOne({ email, type: "signup" });
     if (!record || !record.verified) {
       return res.status(400).send("Email not verified. Please complete OTP verification before signing up.");
     }
-    otpStore.delete(email);
+    await OTP.deleteOne({ email, type: "signup" }); // consume the OTP
   }
 
   const result = await signupUser(result_body);
@@ -423,11 +427,11 @@ app.post("/signup", async (req, res) => {
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
 
-  const otpRecord = loginOtpStore.get(email);
+  const otpRecord = await OTP.findOne({ email, type: "login" });
   if (!otpRecord || !otpRecord.verified) {
     return res.status(400).send("Email not verified. Please complete OTP verification before signing in.");
   }
-  loginOtpStore.delete(email);
+  await OTP.deleteOne({ email, type: "login" }); // consume the OTP
 
   const result = await loginUser(email, password);
 
@@ -449,7 +453,7 @@ app.post("/logout", (req, res) => {
   res.redirect("/login");
 });
 
-// ─── Profile Routes
+// ─── Profile Routes ───────────────────────────────────────────────────────────
 app.get("/mentor-profile/:id", async (req, res) => {
   try {
     const mentor = await Mentor.findById(req.params.id).lean();
@@ -474,7 +478,7 @@ app.get("/mentee-profile/:id", async (req, res) => {
   }
 });
 
-// ─── Mentee Home
+// ─── Mentee Home ──────────────────────────────────────────────────────────────
 app.get("/mentee-home/:id", async (req, res) => {
   try {
     const mentee = await Mentee.findById(req.params.id).lean();
@@ -487,7 +491,7 @@ app.get("/mentee-home/:id", async (req, res) => {
   }
 });
 
-// ─── Mentor Home
+// ─── Mentor Home ──────────────────────────────────────────────────────────────
 app.get("/mentor-home/:id", async (req, res) => {
   try {
     const mentor = await Mentor.findById(req.params.id).lean();
@@ -500,7 +504,7 @@ app.get("/mentor-home/:id", async (req, res) => {
   }
 });
 
-// ─── Mentor Directory
+// ─── Mentor Directory ─────────────────────────────────────────────────────────
 app.get("/mentor-directory", async (req, res) => {
   try {
     const menteeId = typeof req.query.menteeId === "string" ? req.query.menteeId.trim() : "";
@@ -513,7 +517,7 @@ app.get("/mentor-directory", async (req, res) => {
   }
 });
 
-// ─── Session Booking Routes
+// ─── Session Booking Routes ───────────────────────────────────────────────────
 app.post("/book-session", async (req, res) => {
   try {
     const { mentorId, menteeId, date, time, message } = req.body;
@@ -602,7 +606,7 @@ app.post("/update-session", async (req, res) => {
   }
 });
 
-// ─── Booking Page Routes
+// ─── Booking Page Routes ──────────────────────────────────────────────────────
 app.get("/my-bookings/:menteeId", async (req, res) => {
   try {
     const mentee = await Mentee.findById(req.params.menteeId).lean();
@@ -633,14 +637,11 @@ app.get("/mentor-bookings/:mentorId", async (req, res) => {
   }
 });
 
-// ─── Chat Routes ─────────────────────────────────────────────────────────────
-
-// Render chat page — also upserts the Chat document with correct mentor/mentee fields
+// ─── Chat Routes ──────────────────────────────────────────────────────────────
 app.get("/chat/:currentUserId/:otherUserId", async (req, res) => {
   try {
     const { currentUserId, otherUserId } = req.params;
 
-    // Determine which is mentor and which is mentee
     const currentMentor = await Mentor.findById(currentUserId).lean();
     const currentMentee = await Mentee.findById(currentUserId).lean();
     const otherMentor   = await Mentor.findById(otherUserId).lean();
@@ -651,7 +652,6 @@ app.get("/chat/:currentUserId/:otherUserId", async (req, res) => {
 
     if (!currentUserData || !otherUserData) return res.status(404).send("User not found!");
 
-    // chatId is always mentorId_menteeId for consistency
     const mentorData = currentMentor || otherMentor;
     const menteeData = currentMentee || otherMentee;
     const mentorId   = mentorData._id.toString();
@@ -683,7 +683,6 @@ app.get("/chat/:currentUserId/:otherUserId", async (req, res) => {
   }
 });
 
-// REST: fetch paginated chat history (newest last, 50 per page)
 app.get("/chat-history/:chatId", async (req, res) => {
   try {
     const { chatId } = req.params;
@@ -720,7 +719,6 @@ app.get("/chat-history/:chatId", async (req, res) => {
   }
 });
 
-// REST: fetch all chat contacts for a mentor (with lastMessage + unread count)
 app.get("/mentor-chat-contacts/:mentorId", async (req, res) => {
   try {
     const mentorId = req.params.mentorId;
@@ -743,7 +741,6 @@ app.get("/mentor-chat-contacts/:mentorId", async (req, res) => {
   }
 });
 
-// REST: fetch all chat contacts for a mentee (with lastMessage + unread count)
 app.get("/mentee-chat-contacts/:menteeId", async (req, res) => {
   try {
     const menteeId = req.params.menteeId;
@@ -766,7 +763,6 @@ app.get("/mentee-chat-contacts/:menteeId", async (req, res) => {
   }
 });
 
-// Page: mentor chats list
 app.get("/mentor-chats/:mentorId", async (req, res) => {
   try {
     const mentor = await Mentor.findById(req.params.mentorId).lean();
@@ -777,7 +773,7 @@ app.get("/mentor-chats/:mentorId", async (req, res) => {
   }
 });
 
-// ─── Video Call Route ────────────────────────────────────────────────────────
+// ─── Video Call Route ─────────────────────────────────────────────────────────
 app.get("/video-call/:sessionId", async (req, res) => {
   try {
     const { sessionId } = req.params;
@@ -810,7 +806,7 @@ app.get("/video-call/:sessionId", async (req, res) => {
   }
 });
 
-// ─── Analytics Route ─────────────────────────────────────────────────────────
+// ─── Analytics Route ──────────────────────────────────────────────────────────
 app.get("/mentor-analytics/:mentorId", async (req, res) => {
   try {
     const { mentorId } = req.params;
@@ -837,7 +833,6 @@ app.get("/mentor-analytics/:mentorId", async (req, res) => {
 });
 
 // ─── Ratings & Reviews Routes ─────────────────────────────────────────────────
-
 app.post("/submit-review", async (req, res) => {
   try {
     const { sessionId, mentorId, menteeId, rating, comment } = req.body;
@@ -887,7 +882,6 @@ app.get("/check-review/:sessionId", async (req, res) => {
 });
 
 // ─── Group Session Routes ─────────────────────────────────────────────────────
-
 app.post("/create-group-session", async (req, res) => {
   try {
     const { mentorId, title, description, date, time, maxMentees } = req.body;
@@ -1006,9 +1000,9 @@ app.get("/group-video-call/:groupSessionId", async (req, res) => {
   }
 });
 
-// ─── Gemini AI Routes ────────────────────────────────────────────────────────
+// ─── Gemini AI Routes ─────────────────────────────────────────────────────────
 if (!process.env.GEMINI_API_KEY) {
-  console.error("⚠️  GEMINI_API_KEY is missing in .env file!");
+  console.error("⚠️  GEMINI_API_KEY is missing in environment variables!");
   process.exit(1);
 }
 

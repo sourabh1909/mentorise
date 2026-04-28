@@ -1,21 +1,62 @@
 const { Resend } = require("resend");
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+// ─── IMPORTANT ───────────────────────────────────────────────────────────────
+// The FROM address MUST be a domain you have verified in your Resend dashboard.
+// Steps:
+//   1. Go to https://resend.com/domains  →  Add Domain
+//   2. Add your domain (e.g. mentorise.com) and add the DNS records shown.
+//   3. Replace "noreply@yourdomain.com" below with your verified address.
+//
+// ⚠️  Using "onboarding@resend.dev" only works for YOUR OWN Resend account email.
+//     Every other recipient is silently dropped — this is the #1 reason OTPs never arrive.
+// ─────────────────────────────────────────────────────────────────────────────
+const FROM_ADDRESS = process.env.MAIL_FROM || "Mentorise <noreply@yourdomain.com>";
+
 // ─── Generic send mail function ──────────────────────────────────────────────
 const sendMail = async ({ to, subject, html }) => {
   try {
-    await resend.emails.send({
-      from: "Mentorise <onboarding@resend.dev>",
+    const result = await resend.emails.send({
+      from: FROM_ADDRESS,
       to,
       subject,
       html,
     });
-    console.log(`Email sent to ${to}`);
+    console.log(`Email sent to ${to} | id: ${result?.id}`);
     return true;
   } catch (err) {
-    console.error("Email error:", err.message);
+    // Log the full error so you can see it in Render logs
+    console.error("Email error:", err);
     return false;
   }
+};
+
+// ─── Send OTP email ──────────────────────────────────────────────────────────
+const sendOTPEmail = async ({ email, otp, firstName }) => {
+  await sendMail({
+    to: email,
+    subject: "Your Mentorise Verification Code",
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px;">
+        <h2 style="color: #3A5BA0;">Verify Your Email 🔐</h2>
+        <p>Hi <strong>${firstName}</strong>,</p>
+        <p>Use the OTP below to complete your request.</p>
+
+        <div style="background: #f0f4ff; padding: 24px; border-radius: 8px; margin: 20px 0; text-align: center;">
+          <h1 style="font-size: 42px; letter-spacing: 12px; color: #3A5BA0; margin: 0;">
+            ${otp}
+          </h1>
+          <p style="margin: 8px 0 0;">Valid for 10 minutes</p>
+        </div>
+
+        <p>If you didn't request this, you can safely ignore this email.</p>
+
+        <p style="color: #888; font-size: 13px; margin-top: 24px;">
+          — The Mentorise Team
+        </p>
+      </div>
+    `,
+  });
 };
 
 // ─── Send email to mentee when mentor ACCEPTS session ───────────────────────
@@ -26,7 +67,6 @@ const sendSessionAcceptedToMentee = async ({
   date,
   time,
   sessionId,
-  menteeId,
 }) => {
   await sendMail({
     to: menteeEmail,
@@ -91,40 +131,8 @@ const sendSessionRejectedToMentee = async ({
   });
 };
 
-// ─── Send OTP email ──────────────────────────────────────────────────────────
-const sendOTPEmail = async ({ email, otp, firstName }) => {
-  await sendMail({
-    to: email,
-    subject: "Your Mentorise Verification Code",
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px;">
-        <h2 style="color: #3A5BA0;">Verify Your Email 🔐</h2>
-        <p>Hi <strong>${firstName}</strong>,</p>
-        <p>Use the OTP below to complete your registration.</p>
-
-        <div style="background: #f0f4ff; padding: 24px; border-radius: 8px; margin: 20px 0; text-align: center;">
-          <h1 style="font-size: 42px; letter-spacing: 12px; color: #3A5BA0;">
-            ${otp}
-          </h1>
-          <p>Valid for 10 minutes</p>
-        </div>
-
-        <p>If you didn't request this, ignore this email.</p>
-
-        <p style="color: #888; font-size: 13px; margin-top: 24px;">
-          — The Mentorise Team
-        </p>
-      </div>
-    `,
-  });
-};
-
 // ─── Send password reset email ───────────────────────────────────────────────
-const sendPasswordResetEmail = async ({
-  email,
-  firstName,
-  resetLink,
-}) => {
+const sendPasswordResetEmail = async ({ email, firstName, resetLink }) => {
   await sendMail({
     to: email,
     subject: "Reset Your Mentorise Password",
@@ -140,7 +148,7 @@ const sendPasswordResetEmail = async ({
           </a>
         </div>
 
-        <p>This link expires in 15 minutes.</p>
+        <p>This link expires in 15 minutes. If you didn't request this, ignore this email.</p>
 
         <p style="color: #888; font-size: 13px; margin-top: 24px;">
           — The Mentorise Team
