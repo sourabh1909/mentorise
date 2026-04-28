@@ -1,35 +1,63 @@
 const nodemailer = require("nodemailer");
+const dns = require("dns");
 
-// ─── Gmail Transporter (port 587 STARTTLS — works on Render free tier) ───────
-// Render free tier blocks ports 25 and 465 (SMTP SSL).
-// Port 587 with STARTTLS is the only outbound SMTP port Render allows.
+// ─── Force IPv4 by resolving smtp.gmail.com to an IPv4 address at runtime ───
+// Render free tier blocks IPv6. The `family: 4` option in nodemailer is not
+// reliable across all Node versions on Render. Instead we manually resolve
+// smtp.gmail.com to its IPv4 address using dns.resolve4() and connect directly
+// to that IP, which guarantees no IPv6 is ever attempted.
 // ─────────────────────────────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,          // ← 587 STARTTLS (465 SSL is blocked by Render)
-  secure: false,      // false = STARTTLS (upgrades after connection)
-  family: 4,          // force IPv4 (Render free tier blocks IPv6)
-  auth: {
-    user: process.env.GMAIL_USER,
-    pass: process.env.GMAIL_PASS,
-  },
-  tls: {
-    rejectUnauthorized: false, // prevents TLS cert errors on Render
-  },
-});
 
-// Verify transporter on startup — check Render logs for result
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("Gmail transporter error:", error.message);
-  } else {
-    console.log("Gmail transporter ready ✅");
-  }
-});
+let transporter = null;
+
+const createTransporter = () => {
+  return new Promise((resolve, reject) => {
+    dns.resolve4("smtp.gmail.com", (err, addresses) => {
+      if (err || !addresses || addresses.length === 0) {
+        console.error("DNS resolve error:", err?.message);
+        // Fallback: use hostname directly (may still work on some Render regions)
+        resolve(nodemailer.createTransport({
+          host: "smtp.gmail.com",
+          port: 587,
+          secure: false,
+          auth: {
+            user: process.env.GMAIL_USER,
+            pass: process.env.GMAIL_PASS,
+          },
+          tls: { rejectUnauthorized: false },
+        }));
+        return;
+      }
+
+      const ipv4 = addresses[0]; // e.g. "209.85.145.108"
+      console.log(`Connecting to Gmail SMTP via IPv4: ${ipv4}`);
+
+      resolve(nodemailer.createTransport({
+        host: ipv4,          // direct IPv4 — no DNS lookup, no IPv6
+        port: 587,
+        secure: false,
+        auth: {
+          user: process.env.GMAIL_USER,
+          pass: process.env.GMAIL_PASS,
+        },
+        tls: {
+          rejectUnauthorized: false,
+          servername: "smtp.gmail.com", // SNI: tell Gmail which cert to present
+        },
+      }));
+    });
+  });
+};
 
 // ─── Generic send mail function ──────────────────────────────────────────────
+// Lazily initialises the transporter on first use so DNS resolution
+// happens after the server is fully started.
 const sendMail = async ({ to, subject, html }) => {
   try {
+    if (!transporter) {
+      transporter = await createTransporter();
+    }
+
     const info = await transporter.sendMail({
       from: `"Mentorise" <${process.env.GMAIL_USER}>`,
       to,
@@ -40,9 +68,25 @@ const sendMail = async ({ to, subject, html }) => {
     return true;
   } catch (err) {
     console.error("Email send error:", err.message);
+    // Reset transporter so next call re-resolves DNS (IP may have rotated)
+    transporter = null;
     return false;
   }
 };
+
+// ─── Startup verification (non-blocking) ─────────────────────────────────────
+(async () => {
+  try {
+    if (!transporter) {
+      transporter = await createTransporter();
+    }
+    await transporter.verify();
+    console.log("Gmail transporter ready ✅");
+  } catch (err) {
+    console.error("Gmail transporter error:", err.message);
+    transporter = null; // will retry on first email send
+  }
+})();
 
 // ─── Send OTP email ──────────────────────────────────────────────────────────
 const sendOTPEmail = async ({ email, otp, firstName }) => {
@@ -124,9 +168,7 @@ const sendSessionRejectedToMentee = async ({
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 24px; border: 1px solid #e5e7eb; border-radius: 12px;">
         <h2 style="color: #3A5BA0;">Session Update</h2>
         <p>Hi <strong>${menteeName}</strong>,</p>
-        <p>
-          Unfortunately, <strong>${mentorName}</strong> is unable to take your session.
-        </p>
+        <p>Unfortunately, <strong>${mentorName}</strong> is unable to take your session.</p>
 
         <div style="background: #fff5f5; padding: 16px; border-radius: 8px; margin: 16px 0;">
           <p><strong>Date:</strong> ${date}</p>
