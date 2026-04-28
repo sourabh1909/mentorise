@@ -1,51 +1,20 @@
-const nodemailer = require("nodemailer");
+const { Resend } = require("resend");
+const resend = new Resend(process.env.RESEND_API_KEY);
 
-// ─── Create transporter ──────────────────────────────────────────────────────
-const transporter = nodemailer.createTransport({
-  host: "smtp-relay.brevo.com",
-  port: 465,
-  secure: true,
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS,
-  },
-});
-
-// ─── Verify SMTP connection ──────────────────────────────────────────────────
-transporter.verify((error, success) => {
-  if (error) {
-    console.error("SMTP Connection Error:", error.message);
-  } else {
-    console.log("SMTP Server is ready to send emails");
-  }
-});
-
-// ─── Generic send mail function with retry ──────────────────────────────────
+// ─── Generic send mail function ──────────────────────────────────────────────
 const sendMail = async ({ to, subject, html }) => {
-  const maxRetries = 3;
-
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      await transporter.sendMail({
-        from: `"Mentorise" <${process.env.EMAIL_USER}>`,
-        to,
-        subject,
-        html,
-      });
-
-      console.log(`Email sent to ${to}`);
-      return true;
-    } catch (err) {
-      console.error(
-        `Email attempt ${attempt}/${maxRetries} failed:`,
-        err.message
-      );
-
-      if (attempt === maxRetries) {
-        console.error("Final Email Error:", err.message);
-        return false;
-      }
-    }
+  try {
+    await resend.emails.send({
+      from: "Mentorise <onboarding@resend.dev>",
+      to,
+      subject,
+      html,
+    });
+    console.log(`Email sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error("Email error:", err.message);
+    return false;
   }
 };
 
@@ -140,7 +109,7 @@ const sendOTPEmail = async ({ email, otp, firstName }) => {
           <p>Valid for 10 minutes</p>
         </div>
 
-        <p>If you didn’t request this, ignore this email.</p>
+        <p>If you didn't request this, ignore this email.</p>
 
         <p style="color: #888; font-size: 13px; margin-top: 24px;">
           — The Mentorise Team
