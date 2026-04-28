@@ -1,17 +1,20 @@
 const nodemailer = require("nodemailer");
 
-// ─── Gmail Transporter (IPv4 forced — required for Render free tier) ─────────
-// Render's free tier blocks outbound IPv6. Using explicit host + family:4
-// forces Node.js to connect over IPv4 only, which Render allows.
+// ─── Gmail Transporter (port 587 STARTTLS — works on Render free tier) ───────
+// Render free tier blocks ports 25 and 465 (SMTP SSL).
+// Port 587 with STARTTLS is the only outbound SMTP port Render allows.
 // ─────────────────────────────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
-  host: "smtp.gmail.com",   // explicit host instead of service:"gmail"
-  port: 465,                // SSL port
-  secure: true,             // use SSL
-  family: 4,                // ← forces IPv4, fixes ENETUNREACH on Render
+  host: "smtp.gmail.com",
+  port: 587,          // ← 587 STARTTLS (465 SSL is blocked by Render)
+  secure: false,      // false = STARTTLS (upgrades after connection)
+  family: 4,          // force IPv4 (Render free tier blocks IPv6)
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS,
+  },
+  tls: {
+    rejectUnauthorized: false, // prevents TLS cert errors on Render
   },
 });
 
