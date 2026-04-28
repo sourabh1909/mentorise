@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Basic Meta Tags -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mentee Profile - Mentorise</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0f4ff",
+                500: "#3A5BA0",
+                600: "#2F3C7E",
+                700: "#1e2a4a",
+              },
+              secondary: {
+                50: "#fffbf0",
+                500: "#FFD447",
+                600: "#e6bf40",
+              },
+              neutral: {
+                50: "#F5F7FA",
+                100: "#e5e7eb",
+                200: "#d1d5db",
+                600: "#555555",
+                800: "#222222",
+              },
+            },
+            fontFamily: {
+              heading: ["Poppins", "Inter", "sans-serif"],
+              body: ["Roboto", "Open Sans", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- External Stylesheets -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-neutral-50 font-body">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <a href="/mentee-home/<%= userId %>">
+                <h1 class="text-2xl font-bold text-primary-500 font-heading">
+                  Mentorise
+                </h1>
+              </a>
+            </div>
+          </div>
+
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a href="/mentee-home/<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
+              <a href="/mentor-directory?menteeId=<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Find Mentors</a>
+              <a href="/mentee-profile/<%= userId %>" class="text-primary-500 px-3 py-2 rounded-md text-sm font-medium">Profile</a>
+              <a href="/my-bookings/<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">My Bookings</a>
+            </div>
+          </div>
+
+          <div class="hidden md:block">
+            <button class="text-neutral-800 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors" id="logoutbtn">
+              Logout
+            </button>
+          </div>
+
+          <div class="md:hidden">
+            <button id="mobile-menu-button" class="text-neutral-800 hover:text-primary-500 p-2">
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+          <a href="/mentee-home/<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Home</a>
+          <a href="/mentor-directory?menteeId=<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Find Mentors</a>
+          <a href="/mentee-profile/<%= userId %>" class="text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Profile</a>
+          <a href="/my-bookings/<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">My Bookings</a>
+          <button onclick="logout()" class="text-neutral-800 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium w-full text-left">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Profile Content -->
+    <section class="py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto">
+        <div class="bg-white rounded-2xl shadow-lg p-8 border border-neutral-100">
+          <!-- Profile Header -->
+          <div class="text-center mb-8">
+            <div class="relative inline-block mb-4">
+              <div class="w-28 h-28 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-lg mx-auto">
+                <img
+                  src="<%= user.img %>"
+                  alt="Profile Picture"
+                  class="w-28 h-28 rounded-full object-cover"
+                />
+              </div>
+              <div class="absolute -bottom-1 -right-1 bg-blue-500 w-6 h-6 rounded-full flex items-center justify-center">
+                <i class="fas fa-user-graduate text-white text-xs"></i>
+              </div>
+            </div>
+            <h1 id="profileName" class="text-3xl font-bold text-neutral-800 font-heading mb-2">
+              <%= user.firstName %> <%= user.lastName %>
+            </h1>
+            <p id="profileYear" class="text-neutral-600 text-lg mb-2">
+              <%= user.yearOfStudy %>
+            </p>
+            <p id="profileCollege" class="text-primary-500 mb-4">
+              <i class="fas fa-university mr-2"></i>
+              <%= user.college %>
+            </p>
+            <div class="flex flex-wrap gap-2 justify-center mb-6">
+              <span class="bg-primary-50 text-primary-700 px-4 py-2 rounded-full text-sm font-medium">
+                <i class="fas fa-user-graduate mr-2"></i>
+                Active Mentee
+              </span>
+              <span class="bg-blue-50 text-blue-700 px-4 py-2 rounded-full text-sm font-medium">
+                <i class="fas fa-search mr-2"></i>
+                Seeking Mentorship
+              </span>
+            </div>
+          </div>
+
+          <!-- Profile Information -->
+          <div class="space-y-6">
+            <!-- Basic Information -->
+            <div class="border-t border-neutral-200 pt-6">
+              <h3 class="text-lg font-semibold text-neutral-800 mb-4">Basic Information</h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex items-center">
+                  <i class="fas fa-envelope text-primary-500 mr-3 w-5"></i>
+                  <span id="profileEmail" class="text-neutral-600"><%= user.email  %></span>
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-university text-primary-500 mr-3 w-5"></i>
+                  <span id="profileCollegeFull" class="text-neutral-600"><%= user.college %></span>
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-calendar text-primary-500 mr-3 w-5"></i>
+                  <span id="profileYearFull" class="text-neutral-600"><%= user.yearOfStudy %></span>
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-clock text-primary-500 mr-3 w-5"></i>
+                  <span id="memberSince" class="text-neutral-600">recently joined</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Areas of Interest -->
+            <div class="border-t border-neutral-200 pt-6">
+              <h3 class="text-lg font-semibold text-neutral-800 mb-4">Areas of Interest</h3>
+              <div id="areasList" class="flex flex-wrap gap-2">
+                
+                <% if(user.areasOfInterest && user.areasOfInterest.length > 0) { %>
+                    <% user.areasOfInterest.forEach(area => { %>
+                        <span class="bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-primary-200 transition-colors">
+                        <%= area %>
+                         </span>
+                    <% }) %>
+                <% } else { %>
+                      <span>No areas selected</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="border-t border-neutral-200 pt-6 mt-8">
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onclick="window.location.href='/mentor-directory?menteeId=<%= userId %>'"
+                class="border border-primary-500 text-primary-500 px-6 py-3 rounded-lg font-medium hover:bg-primary-50 transition-colors"
+              >
+                <i class="fas fa-search mr-2"></i>
+                Find Mentors
+              </button>
+              <button
+                onclick="window.location.href='/my-bookings/<%= userId %>'"
+                class="border border-secondary-500 text-secondary-600 px-6 py-3 rounded-lg font-medium hover:bg-secondary-50 transition-colors"
+              >
+                <i class="fas fa-calendar mr-2"></i>
+                My Bookings
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+
+    <div id="chat-icon" class="fixed bottom-6 right-6 z-50">
+      <button 
+        onclick="window.location.href='/ai'"
+        class="w-14 h-14 bg-primary-500 hover:bg-primary-600 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-110 flex items-center justify-center group"
+        title="Chat with Mentor AI"
+      >
+        <i class="fa-solid fa-robot text-2xl"></i>
+
+      </button>
+    </div>
+
+    <script>
+      // Define the logout function
+      async function logout() {
+        const res = await fetch("/logout", { method: "POST" });
+        if (res.ok) window.location.href = "/login";
+      }
+
+      // Also attach it via event listener as backup
+      document.getElementById("logoutbtn").addEventListener("click", logout);
+
+      function setupMobileMenu() {
+        const mobileMenuButton = document.getElementById("mobile-menu-button");
+        const mobileMenu = document.getElementById("mobile-menu");
+
+        mobileMenuButton.addEventListener("click", () => {
+          mobileMenu.classList.toggle("hidden");
+        });
+
+        document.addEventListener("click", (e) => {
+          if (!mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+            mobileMenu.classList.add("hidden");
+          }
+        });
+      }
+      document.addEventListener('DOMContentLoaded', function() {
+        setupMobileMenu();
+      });
+    </script>
+  </body>
+</html>

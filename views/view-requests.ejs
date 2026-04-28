@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View Requests - Mentorise</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0f4ff",
+                500: "#3A5BA0",
+                600: "#2F3C7E",
+                700: "#1e2a4a",
+              },
+              secondary: {
+                50: "#fffbf0",
+                500: "#FFD447",
+                600: "#e6bf40",
+              },
+              neutral: {
+                50: "#F5F7FA",
+                100: "#e5e7eb",
+                200: "#d1d5db",
+                600: "#555555",
+                800: "#222222",
+              },
+            },
+            fontFamily: {
+              heading: ["Poppins", "Inter", "sans-serif"],
+              body: ["Roboto", "Open Sans", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
+  </head>
+  
+  <body class="bg-neutral-50 font-body">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <a href="/mentor-home/<%= mentorId %>">
+              <h1 class="text-2xl font-bold text-primary-500 font-heading">Mentorise</h1>
+            </a>
+          </div>
+
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a href="/mentor-home/<%= mentorId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
+              <a href="/mentor-profile/<%= mentorId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+              <a href="/view-requests/<%= mentorId %>" class="text-primary-500 px-3 py-2 rounded-md text-sm font-medium">Requests</a>
+            </div>
+          </div>
+
+          <div class="hidden md:block">
+            <button onclick="logout()" class="text-neutral-800 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              Logout
+            </button>
+          </div>
+
+          <div class="md:hidden">
+            <button id="mobile-menu-button" class="text-neutral-800 hover:text-primary-500 p-2">
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+          <a href="/mentor-home/<%= mentorId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Home</a>
+          <a href="/mentor-profile/<%= mentorId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Profile</a>
+          <a href="/view-requests/<%= mentorId %>" class="text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Requests</a>
+          <button onclick="logout()" class="text-neutral-800 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium w-full text-left">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <!-- Page Header -->
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-neutral-800 mb-4 font-heading">Session Requests</h1>
+        <p class="text-xl text-neutral-600 max-w-3xl mx-auto">
+          Review and respond to mentorship session requests from students.
+        </p>
+      </div>
+
+      <!-- Requests Container -->
+      <div id="requestsContainer" class="space-y-6">
+        <div class="text-center py-8 text-gray-500">
+          <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+          <p>Loading session requests...</p>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div id="emptyState" class="hidden text-center py-16">
+        <div class="w-24 h-24 bg-neutral-200 rounded-full flex items-center justify-center mx-auto mb-6">
+          <i class="fas fa-inbox text-neutral-400 text-3xl"></i>
+        </div>
+        <h3 class="text-xl font-semibold text-neutral-800 mb-2 font-heading">No Pending Requests</h3>
+        <p class="text-neutral-600 mb-6">You don't have any pending session requests at the moment.</p>
+        <button onclick="window.location.href='/mentor-profile/<%= mentorId %>'" class="bg-primary-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-primary-600 transition-colors">
+          <i class="fas fa-user mr-2"></i>
+          Back to Profile
+        </button>
+      </div>
+    </main>
+
+    <script>
+      const mentorId = '<%= mentorId %>';
+
+      // Load requests on page load
+      document.addEventListener('DOMContentLoaded', () => {
+        loadRequests();
+      });
+
+      // Fetch session requests from backend
+      async function loadRequests() {
+        try {
+          const response = await fetch(`/mentor-sessions/${mentorId}`);
+          const data = await response.json();
+
+          if (data.success) {
+            displayRequests(data.sessions);
+          } else {
+            showError('Failed to load requests');
+          }
+        } catch (error) {
+          console.error('Error loading requests:', error);
+          showError('Failed to load session requests');
+        }
+      }
+
+      // Display requests in the UI
+      function displayRequests(sessions) {
+        const container = document.getElementById('requestsContainer');
+        const emptyState = document.getElementById('emptyState');
+
+        // Filter only pending sessions
+        const pendingSessions = sessions.filter(s => s.status === 'pending');
+
+        if (pendingSessions.length === 0) {
+          container.innerHTML = '';
+          emptyState.classList.remove('hidden');
+          return;
+        }
+
+        container.innerHTML = pendingSessions.map(session => {
+          const initials = session.menteeName.split(' ').map(n => n[0]).join('');
+          const colors = ['from-blue-400 to-blue-600', 'from-green-400 to-green-600', 'from-purple-400 to-purple-600', 'from-pink-400 to-pink-600'];
+          const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+          return `
+            <div class="bg-white rounded-2xl shadow-lg p-6 border border-neutral-100 hover:shadow-xl transition-all duration-300" id="request-${session.id}">
+              <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                <!-- Mentee Info -->
+                <div class="flex items-center space-x-4">
+                  <div class="w-16 h-16 bg-gradient-to-br ${randomColor} rounded-full flex items-center justify-center shadow-lg">
+                    <span class="text-white text-xl font-bold">${initials}</span>
+                  </div>
+                  <div>
+                    <h3 class="text-xl font-semibold text-neutral-800 font-heading">${session.menteeName}</h3>
+                    <p class="text-neutral-500 text-sm">
+                      <i class="fas fa-calendar mr-2"></i>
+                      ${formatDate(session.date)} at ${formatTime(session.time)}
+                    </p>
+                    <p class="text-neutral-500 text-sm">
+                      <i class="fas fa-clock mr-2"></i>
+                      Requested ${getTimeAgo(session.createdAt)}
+                    </p>
+                  </div>
+                </div>
+
+                <!-- Request Details -->
+                <div class="flex-1 lg:ml-8">
+                  ${session.message ? `
+                    <div class="mb-4">
+                      <h4 class="font-semibold text-neutral-800 mb-2">Message:</h4>
+                      <p class="text-neutral-600 italic">"${session.message}"</p>
+                    </div>
+                  ` : ''}
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex flex-col sm:flex-row gap-3 lg:flex-col">
+                  <button onclick="acceptRequest('${session.id}')" class="bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center">
+                    <i class="fas fa-check mr-2"></i>
+                    Accept
+                  </button>
+                  <button onclick="rejectRequest('${session.id}')" class="bg-red-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center">
+                    <i class="fas fa-times mr-2"></i>
+                    Reject
+                  </button>
+                </div>
+              </div>
+
+              <!-- Confirmation message shown after accepting -->
+              <div id="acceptedMsg-${session.id}" class="hidden mt-6 pt-6 border-t border-neutral-200">
+                <div class="flex items-center space-x-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
+                  <i class="fas fa-check-circle text-green-500 text-xl"></i>
+                  <div>
+                    <p class="text-green-800 font-medium">Session Accepted!</p>
+                    <p class="text-green-700 text-sm">A video call room has been created. Both you and ${session.menteeName} can join via the Bookings page.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // Accept request directly - no meet link needed
+      async function acceptRequest(sessionId) {
+        if (!confirm('Accept this session request? A video call room will be created automatically.')) return;
+
+        try {
+          const response = await fetch('/update-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ sessionId, status: 'accepted' })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            // Show confirmation message in card
+            const msg = document.getElementById(`acceptedMsg-${sessionId}`);
+            if (msg) msg.classList.remove('hidden');
+
+            // Hide action buttons
+            const btns = document.querySelector(`#request-${sessionId} .flex.flex-col.sm\\:flex-row.gap-3`);
+            if (btns) btns.innerHTML = `<span class="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-medium"><i class="fas fa-check-circle mr-1"></i> Accepted</span>`;
+
+            setTimeout(() => {
+              const requestCard = document.getElementById(`request-${sessionId}`);
+              requestCard.style.transition = 'all 0.3s ease';
+              requestCard.style.opacity = '0';
+              setTimeout(() => { requestCard.remove(); checkEmptyState(); }, 300);
+            }, 2000);
+          } else {
+            alert('❌ Failed to accept request: ' + result.message);
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('❌ An error occurred');
+        }
+      }
+
+      // Reject request
+      async function rejectRequest(sessionId) {
+        if (!confirm('Are you sure you want to reject this request?')) return;
+
+        try {
+          const response = await fetch('/update-session', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              sessionId: sessionId,
+              status: 'rejected'
+            })
+          });
+
+          const result = await response.json();
+
+          if (result.success) {
+            const requestCard = document.getElementById(`request-${sessionId}`);
+            requestCard.style.transition = 'all 0.3s ease';
+            requestCard.style.transform = 'translateX(-100%)';
+            requestCard.style.opacity = '0';
+            
+            setTimeout(() => {
+              requestCard.remove();
+              checkEmptyState();
+            }, 300);
+          } else {
+            alert('❌ Failed to reject request');
+          }
+        } catch (error) {
+          console.error('Error:', error);
+          alert('❌ An error occurred');
+        }
+      }
+
+      // Check if container is empty
+      function checkEmptyState() {
+        const container = document.getElementById('requestsContainer');
+        const emptyState = document.getElementById('emptyState');
+        
+        if (container.children.length === 0) {
+          emptyState.classList.remove('hidden');
+        }
+      }
+
+      // Helper functions
+      function formatDate(dateString) {
+        const date = new Date(dateString);
+        return date.toLocaleDateString('en-US', { 
+          weekday: 'short', 
+          month: 'short', 
+          day: 'numeric',
+          year: 'numeric'
+        });
+      }
+
+      function formatTime(timeString) {
+        const [hours, minutes] = timeString.split(':');
+        const hour = parseInt(hours);
+        const ampm = hour >= 12 ? 'PM' : 'AM';
+        const displayHour = hour % 12 || 12;
+        return `${displayHour}:${minutes} ${ampm}`;
+      }
+
+      function getTimeAgo(dateString) {
+        const date = new Date(dateString);
+        const now = new Date();
+        const diffMs = now - date;
+        const diffMins = Math.floor(diffMs / 60000);
+        const diffHours = Math.floor(diffMs / 3600000);
+        const diffDays = Math.floor(diffMs / 86400000);
+
+        if (diffMins < 60) return diffMins <= 1 ? 'just now' : `${diffMins} minutes ago`;
+        if (diffHours < 24) return diffHours === 1 ? '1 hour ago' : `${diffHours} hours ago`;
+        if (diffDays < 7) return diffDays === 1 ? '1 day ago' : `${diffDays} days ago`;
+        return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+
+      function showError(message) {
+        document.getElementById('requestsContainer').innerHTML = `
+          <div class="text-center py-8 text-red-500">
+            <i class="fas fa-exclamation-circle text-3xl mb-3"></i>
+            <p>${message}</p>
+            <button onclick="loadRequests()" class="mt-4 text-primary-500 hover:text-primary-600 font-medium">
+              <i class="fas fa-refresh mr-2"></i>
+              Try Again
+            </button>
+          </div>
+        `;
+      }
+
+      // Logout function
+      async function logout() {
+        const res = await fetch("/logout", { method: "POST" });
+        if (res.ok) window.location.href = "/login";
+      }
+
+      // Mobile menu
+      document.addEventListener('DOMContentLoaded', function() {
+        const mobileMenuButton = document.getElementById('mobile-menu-button');
+        const mobileMenu = document.getElementById('mobile-menu');
+
+        mobileMenuButton.addEventListener('click', () => {
+          mobileMenu.classList.toggle('hidden');
+        });
+
+        document.addEventListener('click', (e) => {
+          if (!mobileMenuButton.contains(e.target) && !mobileMenu.contains(e.target)) {
+            mobileMenu.classList.add('hidden');
+          }
+        });
+      });
+    </script>
+  </body>
+</html>

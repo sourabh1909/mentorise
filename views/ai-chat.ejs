@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mentor AI Chat - Mentorise</title>
+
+<script src="https://cdn.tailwindcss.com"></script>
+
+<script>
+tailwind.config = {
+  theme:{
+    extend:{
+      colors:{
+        primary:{50:"#f0f4ff",500:"#3A5BA0",600:"#2F3C7E",700:"#1e2a4a"},
+        secondary:{50:"#fffbf0",500:"#FFD447",600:"#e6bf40"},
+        neutral:{50:"#F5F7FA",100:"#e5e7eb",200:"#d1d5db",600:"#555555",800:"#222222"}
+      },
+      fontFamily:{
+        heading:["Poppins","Inter","sans-serif"],
+        body:["Roboto","Open Sans","sans-serif"]
+      }
+    }
+  }
+}
+</script>
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
+
+</head>
+
+<body class="bg-neutral-100 font-body flex flex-col" style="height:100dvh;overflow:hidden">
+
+<!-- NAVBAR -->
+<nav class="bg-white shadow-sm sticky top-0 z-50 flex-shrink-0">
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div class="flex justify-between items-center h-16">
+
+      <!-- Logo -->
+      <a href="<%= role === 'mentor' ? '/mentor-home/' + userId : '/mentee-home/' + userId %>">
+        <h1 class="text-2xl font-bold text-primary-500 font-heading">Mentorise</h1>
+      </a>
+
+      <!-- Desktop nav -->
+      <div class="hidden md:flex items-baseline space-x-2">
+        <a href="<%= role === 'mentor' ? '/mentor-home/' + userId : '/mentee-home/' + userId %>"
+           class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
+
+        <% if (role === 'mentor') { %>
+          <a href="/mentor-profile/<%= userId %>"
+             class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+          <a href="/view-requests/<%= userId %>"
+             class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Requests</a>
+          <a href="/mentor-bookings/<%= userId %>"
+             class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Bookings</a>
+          <a href="/mentor-chats/<%= userId %>"
+             class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Chats</a>
+        <% } else { %>
+          <a href="/mentee-profile/<%= userId %>"
+             class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+          <a href="/mentor-directory?menteeId=<%= userId %>"
+             class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Find Mentors</a>
+          <a href="/my-bookings/<%= userId %>"
+             class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">My Bookings</a>
+        <% } %>
+
+        <a href="/ai"
+           class="text-primary-500 bg-primary-50 px-3 py-2 rounded-md text-sm font-medium">
+          <i class="fa-solid fa-robot mr-1"></i> AI Mentor
+        </a>
+      </div>
+
+      <!-- Desktop logout -->
+      <div class="hidden md:flex items-center">
+        <button onclick="logout()"
+          class="text-neutral-800 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+          Logout
+        </button>
+      </div>
+
+      <!-- Mobile hamburger -->
+      <button id="mobile-menu-btn" class="md:hidden text-neutral-800 p-2">
+        <i class="fas fa-bars text-xl"></i>
+      </button>
+    </div>
+  </div>
+
+  <!-- Mobile dropdown -->
+  <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+    <div class="px-2 pt-2 pb-3 space-y-1">
+      <a href="<%= role === 'mentor' ? '/mentor-home/' + userId : '/mentee-home/' + userId %>"
+         class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Home</a>
+
+      <% if (role === 'mentor') { %>
+        <a href="/mentor-profile/<%= userId %>"
+           class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Profile</a>
+        <a href="/view-requests/<%= userId %>"
+           class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Requests</a>
+        <a href="/mentor-bookings/<%= userId %>"
+           class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Bookings</a>
+        <a href="/mentor-chats/<%= userId %>"
+           class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Chats</a>
+      <% } else { %>
+        <a href="/mentee-profile/<%= userId %>"
+           class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Profile</a>
+        <a href="/mentor-directory?menteeId=<%= userId %>"
+           class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Find Mentors</a>
+        <a href="/my-bookings/<%= userId %>"
+           class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">My Bookings</a>
+      <% } %>
+
+      <a href="/ai"
+         class="text-primary-500 block px-3 py-2 rounded-md text-base font-medium">
+        <i class="fa-solid fa-robot mr-1"></i> AI Mentor
+      </a>
+      <button onclick="logout()"
+        class="text-neutral-800 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium w-full text-left">
+        Logout
+      </button>
+    </div>
+  </div>
+</nav>
+
+
+<!-- CHAT AREA -->
+<div class="flex-1 flex flex-col max-w-4xl mx-auto w-full px-4 py-4 min-h-0">
+
+  <!-- Chat header -->
+  <div class="bg-white rounded-t-2xl shadow-lg border-b border-neutral-100 px-6 py-4 flex-shrink-0">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 bg-primary-500 rounded-full flex items-center justify-center text-white shadow-md">
+        <i class="fas fa-robot text-base"></i>
+      </div>
+      <div>
+        <h2 class="text-lg font-semibold font-heading text-neutral-800">Mentor AI</h2>
+        <div class="flex items-center space-x-1">
+          <span class="w-2 h-2 bg-green-400 rounded-full"></span>
+          <p class="text-xs text-neutral-500">Career guidance assistant · always available</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Messages -->
+  <div id="chat-messages" class="flex-1 overflow-y-auto bg-white px-6 py-5 space-y-4 min-h-0">
+
+    <!-- Welcome bubble -->
+    <div class="flex justify-start items-end space-x-2">
+      <div class="w-7 h-7 bg-primary-500 rounded-full flex items-center justify-center flex-shrink-0 mb-1">
+        <i class="fas fa-robot text-white text-xs"></i>
+      </div>
+      <div class="bg-neutral-100 text-neutral-800 rounded-2xl rounded-bl-sm px-4 py-3 max-w-sm text-sm leading-relaxed">
+        <p class="font-medium mb-1">👋 Hello!</p>
+        <p class="text-neutral-600">I'm your AI Career Mentor. Ask me anything about career development, resume tips, interview prep, or professional growth.</p>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Input bar -->
+  <div class="bg-white rounded-b-2xl shadow-lg px-4 py-3 flex-shrink-0 border-t border-neutral-100">
+    <div class="flex items-end gap-3">
+      <div class="flex-1 flex items-end border border-neutral-200 rounded-2xl px-4 py-2 focus-within:border-primary-500 transition-colors bg-neutral-50">
+        <textarea
+          id="message-input"
+          placeholder="Ask anything about your career..."
+          rows="1"
+          maxlength="500"
+          class="flex-1 resize-none outline-none bg-transparent text-sm max-h-32 py-1 font-body text-neutral-800 placeholder-neutral-400"
+        ></textarea>
+      </div>
+      <button
+        id="send-btn"
+        class="bg-primary-500 text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-primary-600 active:scale-95 transition-all flex-shrink-0 shadow-md disabled:opacity-40 disabled:cursor-not-allowed"
+      >
+        <i class="fas fa-arrow-up text-sm"></i>
+      </button>
+    </div>
+    <p class="text-xs text-neutral-400 mt-2 px-1">
+      <i class="fas fa-shield-alt mr-1"></i>Career guidance only · Enter to send · Shift+Enter for new line
+    </p>
+  </div>
+
+</div>
+
+
+<script>
+
+const userMsg   = document.getElementById("message-input");
+const container = document.getElementById("chat-messages");
+const sendBtn   = document.getElementById("send-btn");
+
+// ── Send a message ──────────────────────────────────────────────
+async function generateMsg(text) {
+  if (!text.trim() || sendBtn.disabled) return;
+
+  sendBtn.disabled = true;
+  userMsg.disabled = true;
+
+  // User bubble
+  appendBubble(text, "user");
+  userMsg.value = "";
+  userMsg.style.height = "auto";
+  container.scrollTop = container.scrollHeight;
+
+  // Thinking bubble
+  const aiBubble = appendBubble("", "ai", true);
+  container.scrollTop = container.scrollHeight;
+
+  // Hit server
+  const response = await callServer(text);
+
+  // Swap thinking → response
+  aiBubble.classList.remove("thinking");
+  aiBubble.innerHTML = formatResponse(response);
+  container.scrollTop = container.scrollHeight;
+
+  sendBtn.disabled = false;
+  userMsg.disabled = false;
+  userMsg.focus();
+}
+
+// Format line breaks in AI response
+function formatResponse(text) {
+  return text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\n/g, "<br>");
+}
+
+function appendBubble(text, who, isThinking = false) {
+  const row = document.createElement("div");
+
+  if (who === "user") {
+    row.className = "flex justify-end items-end space-x-2";
+    row.innerHTML = `
+      <div class="bg-primary-500 text-white rounded-2xl rounded-br-sm px-4 py-3 max-w-sm text-sm leading-relaxed break-words">${text}</div>
+    `;
+  } else {
+    row.className = "flex justify-start items-end space-x-2";
+    const thinkingDots = isThinking
+      ? `<span class="thinking-dots"><span>.</span><span>.</span><span>.</span></span>`
+      : text;
+    row.innerHTML = `
+      <div class="w-7 h-7 bg-primary-500 rounded-full flex items-center justify-center flex-shrink-0 mb-1">
+        <i class="fas fa-robot text-white text-xs"></i>
+      </div>
+      <div class="bg-neutral-100 text-neutral-800 rounded-2xl rounded-bl-sm px-4 py-3 max-w-sm text-sm leading-relaxed break-words${isThinking ? ' italic text-neutral-400' : ''}">${thinkingDots}</div>
+    `;
+  }
+
+  container.appendChild(row);
+  // Return the bubble div for later update
+  return who === "ai" ? row.querySelector("div:last-child") : row.querySelector("div");
+}
+
+async function callServer(text) {
+  try {
+    const res  = await fetch("/ai", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ message: text })
+    });
+    const data = await res.json();
+    return data.result || data.error || "Something went wrong 🙏";
+  } catch {
+    return "Could not reach the server. Please check your connection and try again 🙏";
+  }
+}
+
+// ── Events ──────────────────────────────────────────────────────
+sendBtn.addEventListener("click", () => generateMsg(userMsg.value.trim()));
+
+userMsg.addEventListener("keydown", e => {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    generateMsg(userMsg.value.trim());
+  }
+});
+
+userMsg.addEventListener("input", () => {
+  userMsg.style.height = "auto";
+  userMsg.style.height = userMsg.scrollHeight + "px";
+});
+
+// ── Auth ─────────────────────────────────────────────────────────
+async function logout() {
+  const res = await fetch("/logout", { method: "POST" });
+  if (res.ok) window.location.href = "/login";
+}
+
+// ── Mobile menu ──────────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", () => {
+  userMsg.focus();
+
+  const menuBtn    = document.getElementById("mobile-menu-btn");
+  const mobileMenu = document.getElementById("mobile-menu");
+
+  menuBtn.addEventListener("click", () => mobileMenu.classList.toggle("hidden"));
+  document.addEventListener("click", e => {
+    if (!menuBtn.contains(e.target) && !mobileMenu.contains(e.target))
+      mobileMenu.classList.add("hidden");
+  });
+});
+
+</script>
+
+<style>
+  .thinking-dots span {
+    animation: blink 1.4s infinite;
+    font-style: normal;
+    font-size: 1.2em;
+    line-height: 1;
+  }
+  .thinking-dots span:nth-child(2) { animation-delay: 0.2s; }
+  .thinking-dots span:nth-child(3) { animation-delay: 0.4s; }
+  @keyframes blink { 0%,80%,100%{opacity:0} 40%{opacity:1} }
+</style>
+
+</body>
+</html>

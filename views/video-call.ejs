@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Video Call - Mentorise</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: { colors: { primary: { 50:"#f0f4ff",500:"#3A5BA0",600:"#2F3C7E" } } } }
+    };
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <style>
+    * { -webkit-tap-highlight-color: transparent; }
+    body { background:#0f1117; font-family:'Roboto',sans-serif; overflow:hidden; touch-action:manipulation; }
+    #remoteVideo { width:100%; height:100%; object-fit:cover; border-radius:16px; background:#1a1d2e; transform:scaleX(-1); }
+    #localVideo  { width:100%; height:100%; object-fit:cover; border-radius:10px; background:#1a1d2e; transform:scaleX(-1); }
+    .pip-container {
+      position:absolute; top:12px; right:12px; z-index:10;
+      width:clamp(90px, 22vw, 160px);
+      height:clamp(65px, 16vw, 115px);
+      border:2px solid #3A5BA0; border-radius:10px; overflow:hidden;
+      box-shadow:0 4px 15px rgba(0,0,0,0.5);
+      cursor:move; user-select:none;
+    }
+    .pip-label { position:absolute; bottom:4px; left:6px; background:rgba(0,0,0,.55); color:#fff; font-size:10px; padding:1px 5px; border-radius:4px; pointer-events:none; }
+    .ctrl { width:52px;height:52px;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;font-size:18px;border:none;outline:none; }
+    @media (max-width:480px) { .ctrl { width:44px; height:44px; font-size:16px; } .ctrl.end-btn { width:58px; height:58px; } }
+    .ctrl:hover { transform:scale(1.08); }
+    .ctrl:active { transform:scale(0.95); }
+    .pulse { animation:pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1}50%{opacity:.5} }
+    #endedScreen { display:none;position:fixed;inset:0;background:#0f1117;z-index:100;flex-direction:column;align-items:center;justify-content:center; }
+    #endedScreen.show { display:flex; }
+    .timer { font-variant-numeric:tabular-nums; }
+    #chatPanel { transition: transform 0.3s ease; }
+    #chatPanel.hidden { display:none; }
+    .controls-bar { background:rgba(15,17,23,.97); padding: 10px 0 max(10px, env(safe-area-inset-bottom)); }
+  </style>
+</head>
+<body class="h-screen flex flex-col" style="height:100dvh">
+
+  <!-- TOP BAR -->
+  <div class="flex items-center justify-between px-4 py-2 z-10 flex-shrink-0" style="background:rgba(15,17,23,.95)">
+    <div class="flex items-center space-x-2 min-w-0">
+      <span class="text-white font-bold text-base" style="font-family:Poppins;white-space:nowrap">Mentorise</span>
+      <span class="text-gray-400 text-sm hidden sm:inline">|</span>
+      <span class="text-gray-300 text-xs sm:text-sm truncate hidden sm:block">Session with <strong><%= otherUserName %></strong></span>
+    </div>
+    <div class="flex items-center space-x-2 flex-shrink-0">
+      <span id="callTimer" class="timer text-green-400 text-xs font-mono hidden">00:00</span>
+      <span id="statusBadge" class="text-yellow-400 text-xs px-2 py-1 rounded-full border border-yellow-400 whitespace-nowrap">
+        <i class="fas fa-circle-notch fa-spin mr-1"></i><span class="hidden sm:inline">Connecting</span>
+      </span>
+    </div>
+  </div>
+
+  <!-- VIDEO AREA -->
+  <div class="flex-1 relative px-2 pb-1 min-h-0">
+    <div class="w-full h-full rounded-2xl overflow-hidden relative" style="background:#1a1d2e;">
+      <video id="remoteVideo" autoplay playsinline></video>
+
+      <!-- Waiting overlay -->
+      <div id="waitingOverlay" class="absolute inset-0 flex flex-col items-center justify-center rounded-2xl" style="background:#1a1d2e;">
+        <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full bg-blue-600 flex items-center justify-center mb-4 pulse">
+          <span class="text-white text-2xl sm:text-3xl font-bold"><%= otherUserName.split(' ').map(function(n){return n[0]}).join('') %></span>
+        </div>
+        <p class="text-white text-lg sm:text-xl font-semibold mb-2"><%= otherUserName %></p>
+        <p class="text-gray-400 text-sm pulse">Waiting for them to join...</p>
+      </div>
+
+      <!-- Remote name label -->
+      <div class="absolute bottom-3 left-3 bg-black bg-opacity-50 px-3 py-1 rounded-lg">
+        <span class="text-white text-xs sm:text-sm"><%= otherUserName %></span>
+      </div>
+    </div>
+
+    <!-- Local video PiP (draggable) -->
+    <div class="pip-container" id="pipContainer">
+      <video id="localVideo" autoplay playsinline muted></video>
+      <div class="pip-label">You</div>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div class="controls-bar flex items-center justify-center space-x-3 sm:space-x-4 flex-shrink-0">
+    <button id="muteBtn"   onclick="toggleMute()"        class="ctrl" style="background:#2d3142" title="Mute/Unmute"><i id="muteIcon"   class="fas fa-microphone text-white"></i></button>
+    <button id="camBtn"    onclick="toggleCamera()"      class="ctrl" style="background:#2d3142" title="Camera"><i id="camIcon"    class="fas fa-video text-white"></i></button>
+    <button                onclick="endCall()"           class="ctrl end-btn" style="background:#e63946;width:62px;height:62px" title="End Call"><i class="fas fa-phone-slash text-white text-xl"></i></button>
+    <button id="screenBtn" onclick="toggleScreenShare()" class="ctrl hidden sm:flex" style="background:#2d3142" title="Share Screen"><i id="screenIcon" class="fas fa-desktop text-white"></i></button>
+    <button                onclick="toggleChat()"        class="ctrl" style="background:#2d3142" title="Chat"><i class="fas fa-comment text-white"></i></button>
+  </div>
+
+  <!-- CALL ENDED SCREEN -->
+  <div id="endedScreen">
+    <div class="text-center px-6">
+      <div class="w-20 h-20 sm:w-24 sm:h-24 rounded-full flex items-center justify-center mx-auto mb-6" style="background:rgba(230,57,70,.2)">
+        <i class="fas fa-phone-slash text-red-400 text-3xl sm:text-4xl"></i>
+      </div>
+      <h2 class="text-white text-2xl sm:text-3xl font-bold mb-2" style="font-family:Poppins">Call Ended</h2>
+      <p class="text-gray-400 mb-1 text-sm sm:text-base">Session with <strong class="text-white"><%= otherUserName %></strong> completed</p>
+      <p id="durationLabel" class="text-gray-500 text-sm mb-8"></p>
+      <p class="text-gray-500 text-sm mb-4">Redirecting in <span id="countdown" class="text-blue-400 font-bold">5</span>s...</p>
+      <button onclick="redirectNow()" class="bg-blue-600 text-white px-6 sm:px-8 py-3 rounded-xl font-semibold hover:bg-blue-700 transition-colors text-sm sm:text-base">
+        Go to Profile Now
+      </button>
+    </div>
+  </div>
+
+  <!-- CHAT PANEL (slides in from right) -->
+  <div id="chatPanel" class="hidden fixed right-0 top-0 h-full w-72 sm:w-80 flex flex-col z-50" style="background:#1a1d2e;border-left:1px solid #2d3142">
+    <div class="flex items-center justify-between px-4 py-3 border-b" style="border-color:#2d3142">
+      <span class="text-white font-semibold text-sm">In-call Chat</span>
+      <button onclick="toggleChat()" class="text-gray-400 hover:text-white p-1"><i class="fas fa-times"></i></button>
+    </div>
+    <div id="chatMsgs" class="flex-1 overflow-y-auto px-4 py-3 space-y-2 text-sm"></div>
+    <div class="flex gap-2 px-3 py-3 border-t" style="border-color:#2d3142;padding-bottom:max(12px,env(safe-area-inset-bottom))">
+      <input id="chatInput" type="text" placeholder="Type a message..." maxlength="300"
+        class="flex-1 bg-transparent border border-gray-600 text-white rounded-lg px-3 py-2 text-sm outline-none focus:border-blue-500"
+        onkeydown="if(event.key==='Enter')sendChat()"/>
+      <button onclick="sendChat()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-sm hover:bg-blue-700">
+        <i class="fas fa-paper-plane"></i>
+      </button>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const SESSION_ID   = '<%= sessionId %>';
+    const MY_ID        = '<%= currentUserId %>';
+    const MY_NAME      = '<%= currentUserName %>';
+    const OTHER_ID     = '<%= otherUserId %>';
+    const OTHER_NAME   = '<%= otherUserName %>';
+    const REDIRECT_URL = '<%= redirectUrl %>';
+    const ROOM         = 'video_' + SESSION_ID;
+
+    const ROLE         = '<%= role %>';
+
+    let localStream     = null;
+    let pc              = null;
+    let isMuted         = false;
+    let isCamOff        = false;
+    let isSharing       = false;
+    let origTrack       = null;
+    let timerInterval   = null;
+    let callSecs        = 0;
+
+    const socket = io();
+
+    async function init() {
+      try {
+        localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
+        document.getElementById('localVideo').srcObject = localStream;
+        socket.emit('join-video-room', { room:ROOM, userId:MY_ID, userName:MY_NAME });
+        makePipDraggable();
+      } catch(e) {
+        alert('Cannot access camera/microphone. Please allow permissions and reload.');
+      }
+    }
+
+    // ── Draggable PiP ──
+    function makePipDraggable() {
+      const pip = document.getElementById('pipContainer');
+      let startX, startY, startLeft, startTop, dragging = false;
+
+      const onStart = (cx, cy) => {
+        const r = pip.getBoundingClientRect();
+        startX = cx; startY = cy;
+        startLeft = r.left; startTop = r.top;
+        dragging = true;
+        pip.style.cursor = 'grabbing';
+      };
+      const onMove = (cx, cy) => {
+        if (!dragging) return;
+        const dx = cx - startX, dy = cy - startY;
+        const vw = window.innerWidth, vh = window.innerHeight;
+        const pw = pip.offsetWidth, ph = pip.offsetHeight;
+        const nl = Math.max(0, Math.min(vw - pw, startLeft + dx));
+        const nt = Math.max(0, Math.min(vh - ph, startTop + dy));
+        pip.style.left = nl + 'px'; pip.style.top = nt + 'px';
+        pip.style.right = 'auto';
+      };
+      const onEnd = () => { dragging = false; pip.style.cursor = 'move'; };
+
+      pip.addEventListener('mousedown', e => { onStart(e.clientX, e.clientY); e.preventDefault(); });
+      document.addEventListener('mousemove', e => onMove(e.clientX, e.clientY));
+      document.addEventListener('mouseup', onEnd);
+
+      pip.addEventListener('touchstart', e => { onStart(e.touches[0].clientX, e.touches[0].clientY); }, { passive:true });
+      document.addEventListener('touchmove', e => { if(dragging) { onMove(e.touches[0].clientX, e.touches[0].clientY); e.preventDefault(); } }, { passive:false });
+      document.addEventListener('touchend', onEnd);
+    }
+
+    socket.on('video-user-joined', async ({ userId }) => {
+      if (userId === MY_ID) return;
+      await createPC();
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+      socket.emit('video-signal', { room:ROOM, to:userId, from:MY_ID, type:'offer', sdp:offer });
+    });
+
+    socket.on('video-signal', async ({ from, type, sdp, candidate }) => {
+      if (type === 'offer') {
+        await createPC();
+        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+        const answer = await pc.createAnswer();
+        await pc.setLocalDescription(answer);
+        socket.emit('video-signal', { room:ROOM, to:from, from:MY_ID, type:'answer', sdp:answer });
+      } else if (type === 'answer') {
+        await pc.setRemoteDescription(new RTCSessionDescription(sdp));
+      } else if (type === 'ice' && candidate) {
+        await pc.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    });
+
+    socket.on('video-user-left', ({ userId: leftId }) => {
+      // If the OTHER person left (not us), end our call too
+      if (leftId !== MY_ID) {
+        if (localStream) localStream.getTracks().forEach(t => t.stop());
+        if (pc) { pc.close(); pc = null; }
+        clearInterval(timerInterval);
+        showEndedScreen(true); // true = ended by peer
+      }
+    });
+
+    async function createPC() {
+      if (pc) return;
+      pc = new RTCPeerConnection({
+        iceServers:[
+          {urls:'stun:stun.l.google.com:19302'},
+          {urls:'stun:stun1.l.google.com:19302'}
+        ]
+      });
+      localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
+
+      pc.ontrack = e => {
+        document.getElementById('remoteVideo').srcObject = e.streams[0];
+        document.getElementById('waitingOverlay').style.display = 'none';
+        setStatus('green','Connected');
+        startTimer();
+      };
+
+      pc.onicecandidate = e => {
+        if (e.candidate)
+          socket.emit('video-signal',{ room:ROOM, to:OTHER_ID, from:MY_ID, type:'ice', candidate:e.candidate });
+      };
+
+      pc.onconnectionstatechange = () => {
+        if (pc.connectionState==='connected') setStatus('green','Connected');
+        if (pc.connectionState==='disconnected'||pc.connectionState==='failed') setStatus('red','Lost');
+      };
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      localStream.getAudioTracks().forEach(t => t.enabled = !isMuted);
+      document.getElementById('muteIcon').className = isMuted ? 'fas fa-microphone-slash text-white' : 'fas fa-microphone text-white';
+      document.getElementById('muteBtn').style.background = isMuted ? '#e63946' : '#2d3142';
+    }
+
+    function toggleCamera() {
+      isCamOff = !isCamOff;
+      localStream.getVideoTracks().forEach(t => t.enabled = !isCamOff);
+      document.getElementById('camIcon').className = isCamOff ? 'fas fa-video-slash text-white' : 'fas fa-video text-white';
+      document.getElementById('camBtn').style.background = isCamOff ? '#e63946' : '#2d3142';
+    }
+
+    async function toggleScreenShare() {
+      if (!isSharing) {
+        try {
+          const ss = await navigator.mediaDevices.getDisplayMedia({ video:true });
+          const st = ss.getVideoTracks()[0];
+          origTrack = localStream.getVideoTracks()[0];
+          const sender = pc?.getSenders().find(s => s.track?.kind==='video');
+          if (sender) sender.replaceTrack(st);
+          document.getElementById('localVideo').srcObject = ss;
+          isSharing = true;
+          document.getElementById('screenIcon').className = 'fas fa-desktop text-yellow-400';
+          st.onended = () => stopScreenShare();
+        } catch(e) { console.error(e); }
+      } else { stopScreenShare(); }
+    }
+
+    function stopScreenShare() {
+      if (!origTrack) return;
+      const sender = pc?.getSenders().find(s => s.track?.kind==='video');
+      if (sender) sender.replaceTrack(origTrack);
+      document.getElementById('localVideo').srcObject = localStream;
+      isSharing = false;
+      document.getElementById('screenIcon').className = 'fas fa-desktop text-white';
+      origTrack = null;
+    }
+
+    function endCall() {
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      if (pc) { pc.close(); pc=null; }
+      socket.emit('video-leave', { room:ROOM, userId:MY_ID });
+      clearInterval(timerInterval);
+      showEndedScreen(false);
+    }
+
+    function startTimer() {
+      const el = document.getElementById('callTimer');
+      el.classList.remove('hidden');
+      timerInterval = setInterval(() => {
+        callSecs++;
+        const m = Math.floor(callSecs/60).toString().padStart(2,'0');
+        const s = (callSecs%60).toString().padStart(2,'0');
+        el.textContent = m+':'+s;
+      }, 1000);
+    }
+
+    function showEndedScreen(byPeer = false) {
+      const s = document.getElementById('endedScreen');
+      s.classList.add('show');
+
+      // Update heading if peer ended the call
+      if (byPeer) {
+        s.querySelector('h2').textContent = 'Call Ended';
+        s.querySelector('p').innerHTML = `<strong class="text-white">${OTHER_NAME}</strong> ended the session`;
+      }
+
+      if (callSecs > 0) {
+        const m = Math.floor(callSecs/60), sec = callSecs%60;
+        document.getElementById('durationLabel').textContent = 'Duration: '+(m>0?m+'m ':'')+sec+'s';
+      }
+      let c = 5;
+      const el = document.getElementById('countdown');
+      const iv = setInterval(() => {
+        c--; el.textContent = c;
+        if (c<=0) { clearInterval(iv); redirectNow(); }
+      }, 1000);
+    }
+
+    function redirectNow() { window.location.href = REDIRECT_URL; }
+
+    function setStatus(color, text) {
+      const el = document.getElementById('statusBadge');
+      const colors = { green:'text-green-400 border-green-400', yellow:'text-yellow-400 border-yellow-400', red:'text-red-400 border-red-400' };
+      const icons  = { green:'fa-circle', yellow:'fa-circle-notch fa-spin', red:'fa-circle' };
+      el.className = `${colors[color]} text-xs px-2 py-1 rounded-full border`;
+      el.innerHTML = `<i class="fas ${icons[color]} mr-1"></i><span class="hidden sm:inline"> ${text}</span>`;
+    }
+
+    function toggleChat() { document.getElementById('chatPanel').classList.toggle('hidden'); }
+
+    function sendChat() {
+      const inp = document.getElementById('chatInput');
+      const msg = inp.value.trim();
+      if (!msg) return;
+      socket.emit('video-chat-msg', { room:ROOM, sender:MY_NAME, message:msg });
+      appendChat(MY_NAME, msg, true);
+      inp.value = '';
+    }
+
+    socket.on('video-chat-msg', ({ sender, message }) => {
+      if (sender !== MY_NAME) appendChat(sender, message, false);
+    });
+
+    function appendChat(sender, message, self) {
+      const c = document.getElementById('chatMsgs');
+      const d = document.createElement('div');
+      d.className = self ? 'text-right' : 'text-left';
+      d.innerHTML = `<span class="text-gray-400 text-xs">${self?'You':sender}</span>
+        <div class="inline-block px-3 py-2 rounded-xl text-sm mt-0.5 max-w-xs break-words ${self?'bg-blue-600 text-white':'bg-gray-700 text-white'}">${message}</div>`;
+      c.appendChild(d);
+      c.scrollTop = c.scrollHeight;
+    }
+
+    // Prevent accidental back-swipe on mobile ending call
+    window.addEventListener('beforeunload', () => {
+      if (localStream) localStream.getTracks().forEach(t => t.stop());
+      socket.emit('video-leave', { room:ROOM, userId:MY_ID });
+    });
+
+    init();
+  </script>
+</body>
+</html>

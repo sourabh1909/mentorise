@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Basic Meta Tags -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mentorise - Guidance from Those Who've Been There</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            // Custom Color Palette
+            colors: {
+              primary: {
+                50: "#eef2ff",
+                100: "#c7d2fe",
+                500: "#1E3A8A", // Dark Blue
+                600: "#1e40af",
+                700: "#172554",
+              },
+
+              secondary: {
+                50: "#ecfeff",
+                100: "#cffafe",
+                500: "#14B8A6", // Teal
+                600: "#0D9488",
+              },
+
+              neutral: {
+                50: "#F8FAFC",
+                100: "#e5e7eb",
+                200: "#d1d5db",
+                600: "#4b5563",
+                800: "#111827",
+              },
+            },
+            // Custom Font Families
+            fontFamily: {
+              heading: ["Poppins", "Inter", "sans-serif"], // For headings and titles
+              body: ["Roboto", "Open Sans", "sans-serif"], // For body text
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- External Stylesheets -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-neutral-50 font-body overflow-x-hidden">
+    <!-- ========================================
+         NAVIGATION BAR
+         Sticky navigation with responsive design
+         ======================================== -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- Logo/Brand -->
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <h1 class="text-2xl font-bold text-primary-500 font-heading">
+                Mentorise
+              </h1>
+            </div>
+          </div>
+
+          <!-- Desktop Navigation Menu -->
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a
+                href="#home"
+                class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >Home</a
+              >
+              <a
+                href="#about"
+                class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >What is Mentorise?</a
+              >
+              <a
+                href="#categories"
+                class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >Categories</a
+              >
+
+              <a
+                href="#how"
+                class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >How It Works</a
+              >
+              <a
+                href="#contact"
+                class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >Contact</a
+              >
+            </div>
+          </div>
+
+          <!-- Desktop Action Buttons -->
+          <div class="hidden md:block">
+            <div class="flex items-center space-x-4">
+              <button onclick="window.location.href='/login'"
+                class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Log In
+              </button>
+              <button onclick="window.location.href='signup.html'"
+                class="bg-primary-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-600 transition-all duration-300 shadow-md"
+              >
+                Sign Up
+              </button>
+            </div>
+          </div>
+
+          <!-- Mobile Menu Toggle Button -->
+          <div class="md:hidden">
+            <button
+              id="mobile-menu-button"
+              class="text-neutral-800 hover:text-primary-500 p-2"
+              aria-label="Toggle mobile menu"
+            >
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Navigation Menu (Hidden by default) -->
+      <div id="mobile-menu" class=" hidden md:hidden bg-white border-t">
+        
+
+          <!-- Mobile Action Buttons -->
+          <div class="flex flex-col justify-center items-center pt-4 pb-3 border-t border-neutral-200">
+            <button onclick="window.location.href='Login.html'"
+              class="text-center text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium w-[60%] text-left"
+            >
+              Log In
+            </button>
+            <button onclick="window.location.href='signup.html'"
+              class="bg-primary-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-600 transition-all duration-300 mt-2"
+            >
+              Sign Up
+            </button>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ========================================
+         HERO SECTION
+         Main landing section with call-to-action
+         ======================================== -->
+    <section
+      id="home"
+      class="h-screen sm:flex flex-col justify-center items-center bg-gradient-to-br from-primary-700 via-primary-600 to-primary-500 py-20 text-white"
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto text-center">
+          <div class="space-y-8">
+            <!-- Main Heading and Description -->
+            <div class="space-y-6">
+              <h1
+                class="Landing text-4xl md:text-5xl lg:text-6xl font-bold leading-tight font-heading"
+              >
+                Learn from those who’ve Walked the path before you.
+              </h1>
+              <p class="LandingP text-xl leading-relaxed max-w-3xl mx-auto">
+                Connect with seniors, professors, and alumni who’ve been exactly where you are <br>
+                 and know what it takes to move ahead.
+              </p>
+            </div>
+
+            <!-- Call-to-Action Buttons -->
+            <div
+              class="btn flex flex-col sm:flex-row gap-4 justify-center items-center"
+            >
+              <button
+                onclick="window.location.href='/signup'"
+                class="bg-secondary-500 text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-secondary-600 transition-all duration-300 transform hover:scale-105 shadow-lg"
+              >
+                Find a Mentor
+              </button>
+              <!-- /signup -->
+              <button
+                onclick="window.location.href='/signup'"
+                class="border-2 border-white text-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white hover:text-primary-600 transition-all duration-300"
+              >
+                Become a Mentor
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         ABOUT SECTION
+         Explains what Mentorise is and its value proposition
+         ======================================== -->
+    <section id="about" class="h-screen flex flex-col justify-center items-center py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto text-center">
+          <!-- Section Title -->
+          <h2
+            class="text-3xl md:text-4xl font-bold text-neutral-800 mb-6 font-heading"
+          >
+            Real guidance. Real people. <br> Right from your campus.
+          </h2>
+
+          <!-- Value Proposition Content -->
+          <div class="space-y-6 text-lg text-neutral-600 leading-relaxed">
+            <p>
+              <b>Learn from those who’ve walked the path before you.</b>Connect with <b>seniors, professors, and alumni</b><br>
+              who’ve been exactly where you are and know what it takes to move ahead.
+            </p>
+            <p class="font-semibold text-primary-600">
+              Whether it’s choosing a club, planning higher studies, cracking an interview, or just finding direction
+              <span class="text-secondary-500" 
+                ><br>Mentorise links you to the right people from your own college who’ve done it before.</span
+              >
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         MENTORSHIP CATEGORIES SECTION
+         Showcases different types of mentorship available
+         ======================================== -->
+    <section id="categories" class="py-20 bg-neutral-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Section Header -->
+        <div class="text-center mb-16">
+          <h2
+            class="text-3xl md:text-4xl font-bold text-neutral-800 mb-4 font-heading"
+          >
+            Guidance for Every Stage of Your Journey
+          </h2>
+          <p class="text-xl text-neutral-600 max-w-3xl mx-auto">
+            Different goals need different mentors. Choose the path that matches
+            your needs.
+          </p>
+        </div>
+
+        <!-- Categories Grid -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+          <!-- Higher Studies Category -->
+          <div
+            class="group bg-white rounded-2xl p-8 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-neutral-100 hover:border-blue-200 cursor-pointer relative overflow-hidden"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-blue-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="relative z-10">
+              <div
+                class="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+              >
+                <i class="fas fa-graduation-cap text-white text-2xl"></i>
+              </div>
+              <h3
+                class="text-xl font-bold text-neutral-800 mb-4 font-heading group-hover:text-blue-600 transition-colors duration-300"
+              >
+                🎓 Higher Studies Guidance
+              </h3>
+              <p
+                class="text-neutral-600 leading-relaxed group-hover:text-neutral-700 transition-colors duration-300"
+              >
+                Masters in India & Abroad, exam prep (GATE, GRE, TOEFL, IELTS),
+                SOP & LOR tips, scholarships.
+              </p>
+            </div>
+          </div>
+
+          <!-- Interview & Placement Category -->
+          <div
+            class="group bg-white rounded-2xl p-8 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-neutral-100 hover:border-green-200 cursor-pointer relative overflow-hidden"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-green-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="relative z-10">
+              <div
+                class="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+              >
+                <i class="fas fa-briefcase text-white text-2xl"></i>
+              </div>
+              <h3
+                class="text-xl font-bold text-neutral-800 mb-4 font-heading group-hover:text-green-600 transition-colors duration-300"
+              >
+                💼 Interview & Placement Prep
+              </h3>
+              <p
+                class="text-neutral-600 leading-relaxed group-hover:text-neutral-700 transition-colors duration-300"
+              >
+                Resume building, mock interviews, aptitude prep, communication
+                skills.
+              </p>
+            </div>
+          </div>
+
+          <!-- Startup & Entrepreneurship Category -->
+          <div
+            class="group bg-white rounded-2xl p-8 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-neutral-100 hover:border-purple-200 cursor-pointer relative overflow-hidden"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-purple-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="relative z-10">
+              <div
+                class="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+              >
+                <i class="fas fa-rocket text-white text-2xl"></i>
+              </div>
+              <h3
+                class="text-xl font-bold text-neutral-800 mb-4 font-heading group-hover:text-purple-600 transition-colors duration-300"
+              >
+                🚀 Startup & Entrepreneurship
+              </h3>
+              <p
+                class="text-neutral-600 leading-relaxed group-hover:text-neutral-700 transition-colors duration-300"
+              >
+                Idea validation, pitch deck prep, funding guidance, incubation
+                support.
+              </p>
+            </div>
+          </div>
+
+          <!-- Technical Skills Category -->
+          <div
+            class="group bg-white rounded-2xl p-8 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-neutral-100 hover:border-orange-200 cursor-pointer relative overflow-hidden"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-orange-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="relative z-10">
+              <div
+                class="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+              >
+                <i class="fas fa-laptop-code text-white text-2xl"></i>
+              </div>
+              <h3
+                class="text-xl font-bold text-neutral-800 mb-4 font-heading group-hover:text-orange-600 transition-colors duration-300"
+              >
+                💻 Technical Skills Development
+              </h3>
+              <p
+                class="text-neutral-600 leading-relaxed group-hover:text-neutral-700 transition-colors duration-300"
+              >
+                Coding, projects, hackathons, learning new tools, open-source
+                contribution.
+              </p>
+            </div>
+          </div>
+
+          <!-- Academic Support Category -->
+          <div
+            class="group bg-white rounded-2xl p-8 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-neutral-100 hover:border-red-200 cursor-pointer relative overflow-hidden"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-red-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="relative z-10">
+              <div
+                class="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+              >
+                <i class="fas fa-book text-white text-2xl"></i>
+              </div>
+              <h3
+                class="text-xl font-bold text-neutral-800 mb-4 font-heading group-hover:text-red-600 transition-colors duration-300"
+              >
+                📚 Academic Support
+              </h3>
+              <p
+                class="text-neutral-600 leading-relaxed group-hover:text-neutral-700 transition-colors duration-300"
+              >
+                Subject guidance, lab/project help, semester prep, study
+                materials.
+              </p>
+            </div>
+          </div>
+
+          <!-- Personal Growth Category -->
+          <div
+            class="group bg-white rounded-2xl p-8 hover:shadow-2xl hover:-translate-y-2 transition-all duration-500 border border-neutral-100 hover:border-pink-200 cursor-pointer relative overflow-hidden"
+          >
+            <div
+              class="absolute inset-0 bg-gradient-to-br from-pink-50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"
+            ></div>
+            <div class="relative z-10">
+              <div
+                class="w-16 h-16 bg-gradient-to-br from-pink-500 to-pink-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg"
+              >
+                <i class="fas fa-seedling text-white text-2xl"></i>
+              </div>
+              <h3
+                class="text-xl font-bold text-neutral-800 mb-4 font-heading group-hover:text-pink-600 transition-colors duration-300"
+              >
+                🌱 Personal Growth & Campus Life
+              </h3>
+              <p
+                class="text-neutral-600 leading-relaxed group-hover:text-neutral-700 transition-colors duration-300"
+              >
+                Public speaking, leadership, productivity, mental well-being.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         HOW IT WORKS SECTION
+         Step-by-step process explanation
+         ======================================== -->
+    <section id="how" class="infoContainer h-screen hidden sm:flex flex-col justify-center items-center py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Section Header -->
+        <div class="text-center mb-16">
+          <h2
+            class="text-3xl md:text-4xl font-bold text-neutral-800 mb-4 font-heading"
+          >
+            From First Click to First Breakthrough
+          </h2>
+          <p class="text-xl text-neutral-600 max-w-3xl mx-auto">
+            Your journey to success is just four simple steps away.
+          </p>
+        </div>
+
+        <!-- Process Steps Grid -->
+        <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <!-- Step 1: Browse Mentors -->
+          <div class="info text-center">
+            <div
+              class="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+            >
+              <span class="text-white text-2xl font-bold">1</span>
+            </div>
+            <h3 class="text-xl font-bold text-neutral-800 mb-4 font-heading">
+              Browse Mentors
+            </h3>
+            <p class="text-neutral-600">
+              Explore profiles of senior students & faculty with listed
+              expertise.
+            </p>
+          </div>
+          
+          <!-- Step 2: Book a Session -->
+          <div class="info text-center">
+            <div
+              class="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+            >
+              <span class="text-white text-2xl font-bold">2</span>
+            </div>
+            <h3 class="text-xl font-bold text-neutral-800 mb-4 font-heading">
+              Book a Session
+            </h3>
+            <p class="text-neutral-600">
+              Pick a mentor, select your time, and send a request.
+            </p>
+          </div>
+
+          <!-- Step 3: Connect & Learn -->
+          <div class="info text-center">
+            <div
+              class="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+            >
+              <span class="text-white text-2xl font-bold">3</span>
+            </div>
+            <h3 class="text-xl font-bold text-neutral-800 mb-4 font-heading">
+              Connect & Learn
+            </h3>
+            <p class="text-neutral-600">Meet online or in-person on campus.</p>
+          </div>
+
+          <!-- Step 4: Apply & Grow -->
+          <div class="info text-center">
+            <div
+              class="w-20 h-20 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg"
+            >
+              <span class="text-white text-2xl font-bold">4</span>
+            </div>
+            <h3 class="text-xl font-bold text-neutral-800 mb-4 font-heading">
+              Apply & Grow
+            </h3>
+            <p class="text-neutral-600">
+              Implement advice, track your progress, and keep learning.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         NETWORKING SECTION
+         Additional benefits beyond mentorship
+         ======================================== -->
+    <section class="h-screen py-20 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="max-w-4xl mx-auto text-center">
+          <!-- Section Title -->
+          <h2
+            class="text-3xl md:text-4xl font-bold text-neutral-800 mb-6 font-heading"
+          >
+            It's More Than Just Advice
+          </h2>
+          <p class="text-xl text-neutral-600 mb-8 leading-relaxed">
+            Mentorise isn't only about one-on-one guidance. It's about building
+            <span class="font-semibold text-primary-600"
+              >a living, breathing campus network</span
+            >.
+          </p>
+
+          <!-- Benefits List -->
+          <div class="benefits max-w-3xl mx-auto text-center">
+            <h3 class="text-xl font-bold text-neutral-800 mb-6 font-heading">
+              Through Mentorise, you can:
+            </h3>
+            <div class="grid md:grid-cols-2 gap-4 text-neutral-600">
+              <div class="flex items-center justify-center">
+                <i
+                  class="fas fa-check text-secondary-500 mr-3 flex-shrink-0"
+                ></i>
+                Find students working on similar interests
+              </div>
+              <div class="flex items-center justify-center">
+                <i
+                  class="fas fa-check text-secondary-500 mr-3 flex-shrink-0"
+                ></i>
+                Collaborate on hackathons, competitions, and startups
+              </div>
+              <div class="flex items-center justify-center">
+                <i
+                  class="fas fa-check text-secondary-500 mr-3 flex-shrink-0"
+                ></i>
+                Share resources, opportunities, and ideas
+              </div>
+              <div class="flex items-center justify-center">
+                <i
+                  class="fas fa-check text-secondary-500 mr-3 flex-shrink-0"
+                ></i>
+                Stay updated on campus events and activities
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================
+         FOOTER SECTION
+         Contact information and site links
+         ======================================== -->
+    <footer id="contact" class="bg-neutral-800 text-white py-16">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid md:grid-cols-4 gap-8">
+          <!-- Brand and Description -->
+          <div class="col-span-2">
+            <h3 class="text-2xl font-bold mb-4 font-heading">Mentorise</h3>
+            <p class="text-neutral-300 mb-6 max-w-md">
+              Connecting students with expert mentors to transform careers and
+              accelerate learning journeys within campus networks.
+            </p>
+
+            <!-- Social Media Links -->
+            <div class="flex space-x-4">
+              <a
+                href="#"
+                class="text-neutral-400 hover:text-secondary-400 transition-colors"
+                aria-label="Instagram"
+              >
+                <i class="fab fa-instagram text-xl"></i>
+              </a>
+              <a
+                href="#"
+                class="text-neutral-400 hover:text-secondary-400 transition-colors"
+                aria-label="LinkedIn"
+              >
+                <i class="fab fa-linkedin text-xl"></i>
+              </a>
+              <a
+                href="#"
+                class="text-neutral-400 hover:text-secondary-400 transition-colors"
+                aria-label="YouTube"
+              >
+                <i class="fab fa-youtube text-xl"></i>
+              </a>
+              <a
+                href="#"
+                class="text-neutral-400 hover:text-secondary-400 transition-colors"
+                aria-label="WhatsApp"
+              >
+                <i class="fab fa-whatsapp text-xl"></i>
+              </a>
+            </div>
+          </div>
+
+          <!-- Quick Links -->
+          <div>
+            <h4 class="font-semibold mb-4">Quick Links</h4>
+            <ul class="space-y-2">
+              <li>
+                <a
+                  href="#home"
+                  class="text-neutral-400 hover:text-white transition-colors"
+                  >Home</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#about"
+                  class="text-neutral-400 hover:text-white transition-colors"
+                  >What is Mentorise?</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#categories"
+                  class="text-neutral-400 hover:text-white transition-colors"
+                  >Categories</a
+                >
+              </li>
+              <li>
+                <a
+                  href="mentors.html"
+                  class="text-neutral-400 hover:text-white transition-colors"
+                  >Mentors</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#how"
+                  class="text-neutral-400 hover:text-white transition-colors"
+                  >How It Works</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#contact"
+                  class="text-neutral-400 hover:text-white transition-colors"
+                  >Contact</a
+                >
+              </li>
+            </ul>
+          </div>
+
+          <!-- Contact Information -->
+          <div>
+            <h4 class="font-semibold mb-4">Contact</h4>
+            <ul class="space-y-2">
+              <li class="text-neutral-400">
+                <i class="fas fa-envelope mr-2"></i>
+                contact@mentorise.in
+              </li>
+              <li class="text-neutral-400">
+                <i class="fas fa-map-marker-alt mr-2"></i>
+                Kolhapur, Maharashtra
+              </li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- Copyright -->
+        <div class="border-t border-neutral-700 mt-12 pt-8 text-center">
+          <p class="text-neutral-400">
+            &copy; 2026 Mentorise. Proudly made in India. All Rights Reserved.
+          </p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ========================================
+         JAVASCRIPT FUNCTIONALITY
+         Interactive features and smooth scrolling
+         ======================================== -->
+    <script>
+      // =====================================
+      // Mobile Menu Toggle Functionality
+      // =====================================
+      const mobileMenuButton = document.getElementById("mobile-menu-button");
+      const mobileMenu = document.getElementById("mobile-menu");
+
+      // Toggle mobile menu visibility when hamburger button is clicked
+      mobileMenuButton.addEventListener("click", () => {
+        mobileMenu.classList.toggle("hidden");
+      });
+
+      // =====================================
+      // Smooth Scrolling for Navigation Links
+      // =====================================
+      // Add smooth scrolling behavior to all anchor links that start with #
+      document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+        anchor.addEventListener("click", function (e) {
+          e.preventDefault(); // Prevent default jump behavior
+
+          // Find the target section
+          const target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            // Smooth scroll to the target section
+            target.scrollIntoView({
+              behavior: "smooth",
+              block: "start",
+            });
+
+            // Close mobile menu if it's open (for mobile navigation)
+            if (!mobileMenu.classList.contains("hidden")) {
+              mobileMenu.classList.add("hidden");
+            }
+          }
+        });
+      });
+
+      // =====================================
+      // Optional: Close mobile menu when clicking outside
+      // =====================================
+      document.addEventListener("click", (e) => {
+        if (
+          !mobileMenuButton.contains(e.target) &&
+          !mobileMenu.contains(e.target)
+        ) {
+          mobileMenu.classList.add("hidden");
+        }
+      });
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/gsap.min.js" integrity="sha512-NcZdtrT77bJr4STcmsGAESr06BYGE8woZdSdEgqnpyqac7sugNO+Tr4bGwGF3MsnEkGKhU2KL2xh6Ec+BqsaHA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.13.0/ScrollTrigger.min.js" integrity="sha512-P2IDYZfqSwjcSjX0BKeNhwRUH8zRPGlgcWl5n6gBLzdi4Y5/0O4zaXrtO4K9TZK6Hn1BenYpKowuCavNandERg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <!-- Register ScrollTrigger plugin before IndexAnimation runs -->
+    <script>gsap.registerPlugin(ScrollTrigger);</script>
+    <script src="/scripts/IndexAnimation.js"></script>
+    <!-- =============================================
+         SCROLL ANIMATIONS
+         ============================================= -->
+    <script>
+    (function () {
+      gsap.registerPlugin(ScrollTrigger);
+
+      /* helper: split heading into animated word spans */
+      function wrapWords(el) {
+        const text = el.innerText;
+        el.innerHTML = text
+          .split(" ")
+          .map(w => `<span style="display:inline-block;overflow:hidden;"><span class="_w" style="display:inline-block;">${w}</span></span>`)
+          .join(" ");
+        return el.querySelectorAll("._w");
+      }
+
+      /* ── 1. ABOUT — word reveal + paragraph fade ── */
+      const aboutSection = document.querySelector("#about");
+      if (aboutSection) {
+        const h2 = aboutSection.querySelector("h2");
+        if (h2) {
+          const words = wrapWords(h2);
+          gsap.from(words, {
+            y: "110%", opacity: 0, duration: 0.6, stagger: 0.05, ease: "power3.out",
+            scrollTrigger: { trigger: aboutSection, start: "top 75%", toggleActions: "play none none reverse" },
+          });
+        }
+        gsap.from(aboutSection.querySelectorAll("p"), {
+          y: 40, opacity: 0, duration: 0.8, stagger: 0.2, ease: "power2.out",
+          scrollTrigger: { trigger: aboutSection, start: "top 65%", toggleActions: "play none none reverse" },
+        });
+      }
+
+      /* ── 2. CATEGORIES header — clip-path wipe ── */
+      const catHeader = document.querySelector("#categories .text-center");
+      if (catHeader) {
+        const ch2 = catHeader.querySelector("h2");
+        const cp  = catHeader.querySelector("p");
+        if (ch2) gsap.from(ch2, {
+          clipPath: "inset(0 100% 0 0)", opacity: 0, duration: 1, ease: "power3.inOut",
+          scrollTrigger: { trigger: catHeader, start: "top 80%", toggleActions: "play none none reverse" },
+        });
+        if (cp) gsap.from(cp, {
+          y: 20, opacity: 0, duration: 0.7, delay: 0.4, ease: "power2.out",
+          scrollTrigger: { trigger: catHeader, start: "top 80%", toggleActions: "play none none reverse" },
+        });
+      }
+
+      /* ── 3. CATEGORY CARDS — staggered flip-in with icon bounce ── */
+      const categoryCards = document.querySelectorAll("#categories .group");
+      if (categoryCards.length) {
+        gsap.set(categoryCards, { opacity: 0, y: 60, rotateX: 14 });
+        ScrollTrigger.create({
+          trigger: "#categories", start: "top 70%",
+          onEnter: () => gsap.to(categoryCards, {
+            opacity: 1, y: 0, rotateX: 0, duration: 0.65, stagger: 0.1, ease: "back.out(1.4)",
+          }),
+          onLeaveBack: () => gsap.set(categoryCards, { opacity: 0, y: 60, rotateX: 14 }),
+        });
+        categoryCards.forEach(card => {
+          const icon = card.querySelector(".w-16");
+          if (icon) ScrollTrigger.create({
+            trigger: card, start: "top 82%",
+            onEnter: () => gsap.fromTo(icon,
+              { scale: 0.3, opacity: 0 },
+              { scale: 1, opacity: 1, duration: 0.5, ease: "elastic.out(1, 0.5)" }
+            ),
+          });
+        });
+      }
+
+      /* ── 4. HOW IT WORKS — step pop-in + circle spin ── */
+      const steps = document.querySelectorAll("#how .info");
+      if (steps.length) {
+        gsap.set(steps, { opacity: 0, scale: 0.8, y: 30 });
+        ScrollTrigger.create({
+          trigger: "#how", start: "top 65%",
+          onEnter: () => gsap.to(steps, { opacity: 1, scale: 1, y: 0, duration: 0.55, stagger: 0.15, ease: "back.out(1.7)" }),
+          onLeaveBack: () => gsap.set(steps, { opacity: 0, scale: 0.8, y: 30 }),
+        });
+        const circles = document.querySelectorAll("#how .info .w-20");
+        gsap.set(circles, { rotation: -180, scale: 0 });
+        ScrollTrigger.create({
+          trigger: "#how", start: "top 60%",
+          onEnter: () => gsap.to(circles, { rotation: 0, scale: 1, duration: 0.7, stagger: 0.15, ease: "back.out(1.5)", delay: 0.1 }),
+          onLeaveBack: () => gsap.set(circles, { rotation: -180, scale: 0 }),
+        });
+      }
+
+      /* ── 5. NETWORKING SECTION — title from left, items from right ── */
+      const netSection = document.querySelector(".benefits") && document.querySelector(".benefits").closest("section");
+      if (netSection) {
+        const t = netSection.querySelector("h2");
+        const s = netSection.querySelector("p");
+        const items = netSection.querySelectorAll(".grid > div");
+        if (t) gsap.from(t, { x: -80, opacity: 0, duration: 0.9, ease: "power3.out",
+          scrollTrigger: { trigger: netSection, start: "top 70%", toggleActions: "play none none reverse" } });
+        if (s) gsap.from(s, { x: 80, opacity: 0, duration: 0.9, delay: 0.15, ease: "power3.out",
+          scrollTrigger: { trigger: netSection, start: "top 70%", toggleActions: "play none none reverse" } });
+        if (items.length) gsap.from(items, { x: 60, opacity: 0, duration: 0.5, stagger: 0.12, ease: "power2.out",
+          scrollTrigger: { trigger: ".benefits", start: "top 75%", toggleActions: "play none none reverse" } });
+      }
+
+      /* ── 6. FOOTER — columns rise up ── */
+      const footerCols = document.querySelectorAll("footer .grid > div");
+      if (footerCols.length) gsap.from(footerCols, {
+        y: 50, opacity: 0, duration: 0.7, stagger: 0.12, ease: "power2.out",
+        scrollTrigger: { trigger: "footer", start: "top 85%", toggleActions: "play none none reverse" },
+      });
+
+      /* ── 7. NAVBAR shrink on scroll ── */
+      const nav = document.querySelector("nav");
+      if (nav) {
+        ScrollTrigger.create({
+          start: "top -60", end: "bottom bottom",
+          onUpdate: self => {
+            if (self.progress > 0) {
+              nav.style.boxShadow = "0 4px 24px rgba(0,0,0,0.12)";
+            } else {
+              nav.style.boxShadow = "";
+            }
+          },
+        });
+      }
+
+      /* ── 8. SCROLL PROGRESS BAR ── */
+      const bar = document.createElement("div");
+      bar.style.cssText = [
+        "position:fixed","top:0","left:0","height:3px","width:0%",
+        "background:linear-gradient(90deg,#14B8A6,#1E3A8A)",
+        "z-index:9999","pointer-events:none",
+        "transition:width 0.04s linear",
+        "border-radius:0 2px 2px 0",
+      ].join(";");
+      document.body.appendChild(bar);
+      ScrollTrigger.create({
+        start: "top top", end: "bottom bottom",
+        onUpdate: self => { bar.style.width = (self.progress * 100) + "%"; },
+      });
+
+    })();
+    </script>
+  </body>
+</html>

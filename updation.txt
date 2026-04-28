@@ -1,0 +1,6 @@
+when mentor ends the call automatically mentee's call also 
+cut off
+
+use navigation for ai page also
+
+use index animation for index page

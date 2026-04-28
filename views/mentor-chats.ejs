@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Chats - Mentorise</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: { 50:"#f0f4ff", 500:"#3A5BA0", 600:"#2F3C7E", 700:"#1e2a4a" },
+              neutral: { 50:"#F5F7FA", 100:"#e5e7eb", 600:"#555555", 800:"#222222" },
+            },
+            fontFamily: {
+              heading: ["Poppins", "Inter", "sans-serif"],
+              body:    ["Roboto", "Open Sans", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
+</head>
+<body class="bg-gray-50 min-h-screen font-body">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <a href="/mentor-home/<%= mentorId %>">
+                    <h1 class="text-2xl font-bold text-primary-500 font-heading">Mentorise</h1>
+                </a>
+
+                <div class="hidden md:flex items-baseline space-x-2">
+                    <a href="/mentor-home/<%= mentorId %>"     class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
+                    <a href="/mentor-profile/<%= mentorId %>"  class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+                    <a href="/view-requests/<%= mentorId %>"   class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Requests</a>
+                    <a href="/mentor-bookings/<%= mentorId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Bookings</a>
+                    <a href="/mentor-chats/<%= mentorId %>"    class="text-primary-500 bg-primary-50 px-3 py-2 rounded-md text-sm font-medium">Chats</a>
+                </div>
+
+                <div class="hidden md:flex items-center">
+                    <button onclick="logout()" class="text-neutral-800 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</button>
+                </div>
+
+                <button id="mobile-menu-btn" class="md:hidden text-neutral-800 p-2">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1">
+                <a href="/mentor-home/<%= mentorId %>"     class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Home</a>
+                <a href="/mentor-profile/<%= mentorId %>"  class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Profile</a>
+                <a href="/view-requests/<%= mentorId %>"   class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Requests</a>
+                <a href="/mentor-bookings/<%= mentorId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Bookings</a>
+                <a href="/mentor-chats/<%= mentorId %>"    class="text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Chats</a>
+                <button onclick="logout()" class="text-neutral-800 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium w-full text-left">Logout</button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="max-w-4xl mx-auto px-4 py-8">
+        <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+            <!-- Header -->
+            <div class="bg-primary-500 text-white px-6 py-4">
+                <h2 class="text-2xl font-bold">
+                    <i class="fas fa-comments mr-2"></i>
+                    My Chats
+                </h2>
+                <p class="text-sm text-blue-100 mt-1">Chat with your mentees</p>
+            </div>
+
+            <!-- Chat List -->
+            <div id="chatList" class="divide-y">
+                <div class="text-center py-8 text-gray-500">
+                    <i class="fas fa-spinner fa-spin text-3xl mb-3"></i>
+                    <p>Loading conversations...</p>
+                </div>
+            </div>
+
+            <!-- Empty State -->
+            <div id="emptyState" class="hidden text-center py-16 px-4">
+                <i class="fas fa-comments text-gray-300 text-5xl mb-4"></i>
+                <h3 class="text-xl font-semibold text-gray-700 mb-2">No Chats Yet</h3>
+                <p class="text-gray-500">Your conversations will appear here</p>
+            </div>
+        </div>
+    </main>
+
+    <script>
+    const mentorId = '<%= mentorId %>';
+
+    async function loadChats() {
+        try {
+            const response = await fetch(`/mentor-chat-contacts/${mentorId}`);
+            const data = await response.json();
+
+            if (data.success) {
+                displayChats(data.contacts);
+            } else {
+                showError();
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            showError();
+        }
+    }
+
+    function displayChats(contacts) {
+        const chatList = document.getElementById('chatList');
+        const emptyState = document.getElementById('emptyState');
+
+        if (contacts.length === 0) {
+            chatList.innerHTML = '';
+            emptyState.classList.remove('hidden');
+            return;
+        }
+
+        chatList.innerHTML = contacts.map(contact => {
+            const initials = contact.name.split(' ').map(n => n[0]).join('');
+            const colors = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-pink-500', 'bg-orange-500'];
+            const randomColor = colors[Math.floor(Math.random() * colors.length)];
+
+            return `
+                <div onclick="openChat('${contact.id}')" 
+                     class="px-6 py-4 hover:bg-gray-50 cursor-pointer transition-colors flex items-center justify-between group">
+                    <div class="flex items-center space-x-4">
+                        <div class="${randomColor} w-12 h-12 rounded-full flex items-center justify-center text-white font-bold">
+                            ${initials}
+                        </div>
+                        <div>
+                            <h3 class="font-semibold text-gray-900">${contact.name}</h3>
+                            <p class="text-sm text-gray-500">Click to chat</p>
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-right text-gray-400 group-hover:text-primary-500 transition-colors"></i>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function openChat(menteeId) {
+        window.location.href = `/chat/${mentorId}/${menteeId}`;
+    }
+
+    function showError() {
+        document.getElementById('chatList').innerHTML = `
+            <div class="text-center py-8 text-red-500">
+                <i class="fas fa-exclamation-circle text-3xl mb-3"></i>
+                <p>Failed to load chats</p>
+                <button onclick="loadChats()" class="mt-4 text-primary-500 hover:text-primary-600 font-medium">
+                    <i class="fas fa-refresh mr-2"></i>Try Again
+                </button>
+            </div>
+        `;
+    }
+
+    async function logout() {
+        const res = await fetch('/logout', { method: 'POST' });
+        if (res.ok) window.location.href = '/login';
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        loadChats();
+        const btn  = document.getElementById('mobile-menu-btn');
+        const menu = document.getElementById('mobile-menu');
+        btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+        document.addEventListener('click', e => {
+            if (!btn.contains(e.target) && !menu.contains(e.target)) menu.classList.add('hidden');
+        });
+    });</script>
+</body>
+</html>

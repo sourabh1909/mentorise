@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Home - Mentorise</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: { 50:"#f0f4ff", 500:"#3A5BA0", 600:"#2F3C7E", 700:"#1e2a4a" },
+            secondary: { 50:"#fffbf0", 500:"#FFD447", 600:"#e6bf40" },
+            neutral: { 50:"#F5F7FA", 100:"#e5e7eb", 200:"#d1d5db", 600:"#555555", 800:"#222222" },
+          },
+          fontFamily: {
+            heading: ["Poppins", "Inter", "sans-serif"],
+            body:    ["Roboto", "Open Sans", "sans-serif"],
+          },
+        },
+      },
+    };
+  </script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    .card-hover { transition: all 0.25s ease; }
+    .card-hover:hover { transform: translateY(-3px); box-shadow: 0 12px 28px rgba(0,0,0,0.1); }
+    .fade-in { animation: fadeIn 0.5s ease-out; }
+    @keyframes fadeIn { from { opacity:0; transform:translateY(12px); } to { opacity:1; transform:translateY(0); } }
+  </style>
+</head>
+<body class="bg-neutral-50 font-body min-h-screen">
+
+  <!-- Navigation -->
+  <nav class="bg-white shadow-sm sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <a href="/mentee-home/<%= userId %>">
+          <h1 class="text-2xl font-bold text-primary-500 font-heading">Mentorise</h1>
+        </a>
+
+        <div class="hidden md:flex items-baseline space-x-2">
+          <a href="/mentee-home/<%= userId %>" class="text-primary-500 bg-primary-50 px-3 py-2 rounded-md text-sm font-medium">Home</a>
+          <a href="/mentee-profile/<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Profile</a>
+          <a href="/mentor-directory?menteeId=<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Find Mentors</a>
+          <a href="/my-bookings/<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">My Bookings</a>
+        </div>
+
+        <div class="hidden md:flex items-center space-x-3">
+          <a href="/ai?userId=<%= userId %>&role=mentee" class="bg-primary-500 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-primary-600 transition-colors">
+            <i class="fa-solid fa-robot mr-1"></i> AI Mentor
+          </a>
+          <button onclick="logout()" class="text-neutral-800 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Logout</button>
+        </div>
+
+        <button id="mobile-menu-btn" class="md:hidden text-neutral-800 p-2">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+
+    <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+      <div class="px-2 pt-2 pb-3 space-y-1">
+        <a href="/mentee-home/<%= userId %>" class="text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Home</a>
+        <a href="/mentee-profile/<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Profile</a>
+        <a href="/mentor-directory?menteeId=<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Find Mentors</a>
+        <a href="/my-bookings/<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">My Bookings</a>
+        <a href="/ai?userId=<%= userId %>&role=mentee" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">AI Mentor</a>
+        <button onclick="logout()" class="text-neutral-800 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium w-full text-left">Logout</button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero / Welcome Banner -->
+  <section class="bg-gradient-to-br from-primary-500 to-primary-700 text-white py-14 px-4">
+    <div class="max-w-5xl mx-auto fade-in">
+      <p class="text-primary-100 text-sm font-medium mb-2 uppercase tracking-wider">Welcome back</p>
+      <h2 class="text-3xl sm:text-4xl font-bold font-heading mb-3">
+        Hello, <%= user.firstName %>! 👋
+      </h2>
+      <p class="text-primary-100 text-lg mb-8 max-w-xl">
+        Your mentorship journey continues. Find a mentor, join a session, or ask the AI for career guidance.
+      </p>
+      <div class="flex flex-wrap gap-3">
+        <a href="/mentor-directory?menteeId=<%= userId %>"
+           class="bg-secondary-500 hover:bg-secondary-600 text-neutral-800 font-semibold px-6 py-3 rounded-xl transition-colors shadow-lg">
+          <i class="fas fa-search mr-2"></i>Find a Mentor
+        </a>
+        <a href="/my-bookings/<%= userId %>"
+           class="bg-white bg-opacity-15 hover:bg-opacity-25 text-white font-semibold px-6 py-3 rounded-xl transition-colors border border-white border-opacity-30">
+          <i class="fas fa-calendar-check mr-2"></i>My Bookings
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Quick Stats -->
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 -mt-6 mb-10">
+    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 fade-in">
+
+      <div id="statPending" class="bg-white rounded-2xl shadow-md p-5 border border-neutral-100 card-hover cursor-pointer"
+           onclick="window.location.href='/my-bookings/<%= userId %>'">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-neutral-600 text-sm mb-1">Pending Requests</p>
+            <p id="pendingCount" class="text-3xl font-bold text-yellow-500 font-heading">—</p>
+          </div>
+          <div class="w-12 h-12 bg-yellow-50 rounded-full flex items-center justify-center">
+            <i class="fas fa-hourglass-half text-yellow-500 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div id="statConfirmed" class="bg-white rounded-2xl shadow-md p-5 border border-neutral-100 card-hover cursor-pointer"
+           onclick="window.location.href='/my-bookings/<%= userId %>'">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-neutral-600 text-sm mb-1">Confirmed Sessions</p>
+            <p id="confirmedCount" class="text-3xl font-bold text-green-500 font-heading">—</p>
+          </div>
+          <div class="w-12 h-12 bg-green-50 rounded-full flex items-center justify-center">
+            <i class="fas fa-check-circle text-green-500 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-2xl shadow-md p-5 border border-neutral-100 card-hover cursor-pointer"
+           onclick="window.location.href='/ai?userId=<%= userId %>&role=mentee'">
+        <div class="flex items-center justify-between">
+          <div>
+            <p class="text-neutral-600 text-sm mb-1">AI Career Mentor</p>
+            <p class="text-xl font-bold text-primary-500 font-heading">Ask Now</p>
+          </div>
+          <div class="w-12 h-12 bg-primary-50 rounded-full flex items-center justify-center">
+            <i class="fa-solid fa-robot text-primary-500 text-xl"></i>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Main Actions Grid -->
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+    <h3 class="text-xl font-semibold text-neutral-800 font-heading mb-5">What would you like to do?</h3>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5 fade-in">
+
+      <!-- Find Mentors -->
+      <a href="/mentor-directory?menteeId=<%= userId %>"
+         class="bg-white rounded-2xl shadow-md p-6 border border-neutral-100 card-hover flex flex-col">
+        <div class="w-12 h-12 bg-primary-50 rounded-xl flex items-center justify-center mb-4">
+          <i class="fas fa-users text-primary-500 text-xl"></i>
+        </div>
+        <h4 class="text-lg font-semibold text-neutral-800 font-heading mb-2">Find Mentors</h4>
+        <p class="text-neutral-600 text-sm flex-1">Browse our directory of verified industry professionals and book a session.</p>
+        <span class="mt-4 text-primary-500 text-sm font-medium">Browse directory →</span>
+      </a>
+
+      <!-- My Bookings -->
+      <a href="/my-bookings/<%= userId %>"
+         class="bg-white rounded-2xl shadow-md p-6 border border-neutral-100 card-hover flex flex-col">
+        <div class="w-12 h-12 bg-green-50 rounded-xl flex items-center justify-center mb-4">
+          <i class="fas fa-calendar-check text-green-500 text-xl"></i>
+        </div>
+        <h4 class="text-lg font-semibold text-neutral-800 font-heading mb-2">My Bookings</h4>
+        <p class="text-neutral-600 text-sm flex-1">View your pending and confirmed sessions. Join a video call when it's time.</p>
+        <span class="mt-4 text-green-600 text-sm font-medium">View bookings →</span>
+      </a>
+
+      <!-- Profile -->
+      <a href="/mentee-profile/<%= userId %>"
+         class="bg-white rounded-2xl shadow-md p-6 border border-neutral-100 card-hover flex flex-col">
+        <div class="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center mb-4">
+          <i class="fas fa-user-graduate text-blue-500 text-xl"></i>
+        </div>
+        <h4 class="text-lg font-semibold text-neutral-800 font-heading mb-2">My Profile</h4>
+        <p class="text-neutral-600 text-sm flex-1">Update your interests, college, and year of study so mentors know more about you.</p>
+        <span class="mt-4 text-blue-600 text-sm font-medium">Edit profile →</span>
+      </a>
+
+      <!-- AI Mentor -->
+      <a href="/ai?userId=<%= userId %>&role=mentee"
+         class="bg-white rounded-2xl shadow-md p-6 border border-neutral-100 card-hover flex flex-col">
+        <div class="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center mb-4">
+          <i class="fa-solid fa-robot text-purple-500 text-xl"></i>
+        </div>
+        <h4 class="text-lg font-semibold text-neutral-800 font-heading mb-2">AI Career Mentor</h4>
+        <p class="text-neutral-600 text-sm flex-1">Get instant career advice, resume tips, and interview prep from our AI mentor.</p>
+        <span class="mt-4 text-purple-600 text-sm font-medium">Ask the AI →</span>
+      </a>
+
+      <!-- Upcoming session quick-join (shown only if there's a confirmed upcoming session) -->
+      <div id="upcomingSessionCard" class="hidden bg-gradient-to-br from-primary-500 to-primary-600 rounded-2xl shadow-md p-6 card-hover flex flex-col">
+        <div class="w-12 h-12 bg-white bg-opacity-20 rounded-xl flex items-center justify-center mb-4">
+          <i class="fas fa-video text-white text-xl"></i>
+        </div>
+        <h4 class="text-lg font-semibold text-white font-heading mb-1">Upcoming Session</h4>
+        <p id="upcomingSessionInfo" class="text-primary-100 text-sm flex-1 mb-4"></p>
+        <button id="joinCallBtn" class="bg-secondary-500 hover:bg-secondary-600 text-neutral-800 font-semibold px-4 py-2 rounded-lg transition-colors text-sm">
+          <i class="fas fa-video mr-2"></i>Join Video Call
+        </button>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- Areas of Interest chips -->
+  <% if (user.areasOfInterest && user.areasOfInterest.length > 0) { %>
+  <section class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mb-12 fade-in">
+    <h3 class="text-xl font-semibold text-neutral-800 font-heading mb-4">Your Interests</h3>
+    <div class="flex flex-wrap gap-2">
+      <% user.areasOfInterest.forEach(area => { %>
+        <a href="/mentor-directory?menteeId=<%= userId %>"
+           class="bg-primary-50 text-primary-700 px-4 py-2 rounded-full text-sm font-medium hover:bg-primary-100 transition-colors">
+          <%= area %>
+        </a>
+      <% }) %>
+    </div>
+    <p class="text-neutral-500 text-xs mt-3">Click an interest to find matching mentors.</p>
+  </section>
+  <% } %>
+
+  <script>
+    const userId = '<%= userId %>';
+
+    // ── Load session stats ──────────────────────────────────────────────────
+    async function loadStats() {
+      try {
+        const res = await fetch(`/mentee-sessions/${userId}`);
+        const data = await res.json();
+        if (!data.success) return;
+
+        const sessions = data.sessions;
+        const pending   = sessions.filter(s => s.status === 'pending').length;
+        const confirmed = sessions.filter(s => s.status === 'accepted').length;
+
+        document.getElementById('pendingCount').textContent   = pending;
+        document.getElementById('confirmedCount').textContent = confirmed;
+
+        // Find the next upcoming confirmed session
+        const now = new Date();
+        const upcoming = sessions
+          .filter(s => s.status === 'accepted' && new Date(s.date + ' ' + s.time) >= now)
+          .sort((a, b) => new Date(a.date + ' ' + a.time) - new Date(b.date + ' ' + b.time))[0];
+
+        if (upcoming) {
+          const card = document.getElementById('upcomingSessionCard');
+          const info = document.getElementById('upcomingSessionInfo');
+          const btn  = document.getElementById('joinCallBtn');
+
+          card.classList.remove('hidden');
+          card.classList.add('flex');
+
+          const d = new Date(upcoming.date).toLocaleDateString('en-US', { weekday:'short', month:'short', day:'numeric' });
+          const [h, m] = upcoming.time.split(':');
+          const hr = parseInt(h);
+          const timeStr = `${hr % 12 || 12}:${m} ${hr >= 12 ? 'PM' : 'AM'}`;
+          info.textContent = `With ${upcoming.mentorName} · ${d} at ${timeStr}`;
+
+          btn.onclick = () => window.open(`/video-call/${upcoming.id}?userId=${userId}`, '_blank');
+        }
+      } catch (e) {
+        console.error('Stats error:', e);
+      }
+    }
+
+    // ── Auth ────────────────────────────────────────────────────────────────
+    async function logout() {
+      const res = await fetch('/logout', { method: 'POST' });
+      if (res.ok) window.location.href = '/login';
+    }
+
+    // ── Mobile menu ─────────────────────────────────────────────────────────
+    document.addEventListener('DOMContentLoaded', () => {
+      loadStats();
+
+      const btn  = document.getElementById('mobile-menu-btn');
+      const menu = document.getElementById('mobile-menu');
+      btn.addEventListener('click', () => menu.classList.toggle('hidden'));
+      document.addEventListener('click', e => {
+        if (!btn.contains(e.target) && !menu.contains(e.target)) menu.classList.add('hidden');
+      });
+    });
+  </script>
+</body>
+</html>

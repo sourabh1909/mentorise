@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Basic Meta Tags -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mentor Profile - Mentorise</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0f4ff",
+                500: "#3A5BA0",
+                600: "#2F3C7E",
+                700: "#1e2a4a",
+              },
+              secondary: {
+                50: "#fffbf0",
+                500: "#FFD447",
+                600: "#e6bf40",
+              },
+              neutral: {
+                50: "#F5F7FA",
+                100: "#e5e7eb",
+                200: "#d1d5db",
+                600: "#555555",
+                800: "#222222",
+              },
+            },
+            fontFamily: {
+              heading: ["Poppins", "Inter", "sans-serif"],
+              body: ["Roboto", "Open Sans", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- External Stylesheets -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Custom Styles -->
+    <style>
+      /* Smooth transitions and subtle animations */
+      .card-hover {
+        transition: all 0.2s ease-in-out;
+      }
+
+      .card-hover:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 6px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f1f1;
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #c1c1c1;
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: #a8a8a8;
+      }
+
+      /* Loading animation for dynamic content */
+      .fade-in {
+        animation: fadeIn 0.3s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-neutral-50 font-body">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-sm sticky top-0 z-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <div class="flex-shrink-0">
+              <a href="/mentor-home/<%= userId %>">
+                <h1 class="text-2xl font-bold text-primary-500 font-heading">
+                  Mentorise
+                </h1>
+              </a>
+            </div>
+          </div>
+
+          <div class="hidden md:block">
+            <div class="ml-10 flex items-baseline space-x-4">
+              <a href="/mentor-home/<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Home</a>
+              <a href="/mentor-profile/<%= userId %>" class="text-primary-500 px-3 py-2 rounded-md text-sm font-medium">Profile</a>
+              <a href="/view-requests/<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Requests</a>
+              <a href="/mentor-bookings/<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Bookings</a>
+              <a href="/mentor-chats/<%= userId %>" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">Chats</a>
+            </div>
+          </div>
+
+          <div class="hidden md:block">
+            <button
+              id="logoutbtn"
+              onclick="logout()"
+              class="text-neutral-800 hover:text-red-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Logout
+            </button>
+          </div>
+
+          <div class="md:hidden">
+            <button
+              id="mobile-menu-button"
+              class="text-neutral-800 hover:text-primary-500 p-2"
+            >
+              <i class="fas fa-bars text-xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div id="mobile-menu" class="hidden md:hidden bg-white border-t">
+        <div class="px-2 pt-2 pb-3 space-y-1">
+          <a href="/mentor-home/<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Home</a>
+          <a href="/mentor-profile/<%= userId %>" class="text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Profile</a>
+          <a href="/view-requests/<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Requests</a>
+          <a href="/mentor-bookings/<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Bookings</a>
+          <a href="/mentor-chats/<%= userId %>" class="text-neutral-800 hover:text-primary-500 block px-3 py-2 rounded-md text-base font-medium">Chats</a>
+          <button onclick="logout()" id="logoutbtn" class="text-neutral-800 hover:text-red-500 block px-3 py-2 rounded-md text-base font-medium w-full text-left">Logout</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Profile Content -->
+    <section class="py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-3xl mx-auto">
+        <div
+          class="bg-white rounded-2xl shadow-lg p-8 border border-neutral-100"
+        >
+          <!-- Profile Header -->
+          <div class="text-center mb-8">
+            <div class="relative inline-block mb-4">
+              <div
+                class="w-28 h-28 bg-gradient-to-br from-primary-500 to-primary-600 rounded-full flex items-center justify-center shadow-lg mx-auto"
+              >
+                <img
+                  src="<%= user.img %>"
+                  alt="Profile Picture"
+                  class="w-28 h-28 rounded-full object-cover"
+                />
+              </div>
+              <div
+                class="absolute -bottom-1 -right-1 bg-green-500 w-6 h-6 rounded-full flex items-center justify-center"
+              >
+                <i class="fas fa-check text-white text-xs"></i>
+              </div>
+            </div>
+            <h1
+              id="profileName"
+              class="text-3xl font-bold text-neutral-800 font-heading mb-2"
+            >
+              <%= user.firstName %> <%= user.lastName %>
+            </h1>
+            <p id="profileRole" class="text-neutral-600 text-lg mb-2">
+              <%= user.currentRole %>
+            </p>
+            <p id="profileField" class="text-primary-500 mb-4">
+              <i class="fas fa-graduation-cap mr-2"></i>
+              <span id="fieldDisplay"><%= user.field %></span>
+            </p>
+            <div class="flex flex-wrap gap-2 justify-center mb-6">
+              <span
+                id="verificationBadge"
+                class="bg-green-50 text-green-700 px-4 py-2 rounded-full text-sm font-medium"
+              >
+                <i class="fas fa-check-circle mr-2"></i>
+                Verified Mentor
+              </span>
+              <span
+                class="bg-primary-50 text-primary-700 px-4 py-2 rounded-full text-sm font-medium"
+              >
+                <i class="fas fa-chalkboard-teacher mr-2"></i>
+                Active Mentor
+              </span>
+            </div>
+          </div>
+
+          <!-- Profile Information -->
+          <div class="space-y-6">
+            <!-- Basic Information -->
+            <div class="border-t border-neutral-200 pt-6">
+              <h3 class="text-lg font-semibold text-neutral-800 mb-4">
+                <i class="fas fa-circle-info text-primary-500 mr-2"></i>
+                About
+              </h3>
+              <div class="text-neutral-600"><%= user.about %></div>
+            </div>
+            <div class="border-t border-neutral-200 pt-6">
+              <h3 class="text-lg font-semibold text-neutral-800 mb-4">
+                <i class="fas fa-user text-primary-500 mr-2"></i>
+                Profile Details
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="flex items-center">
+                  <i class="fas fa-envelope text-primary-500 mr-3 w-5"></i>
+                  <span id="profileEmail" class="text-neutral-600"
+                    ><%= user.email %></span
+                  >
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-briefcase text-primary-500 mr-3 w-5"></i>
+                  <span id="profileRoleDisplay" class="text-neutral-600"
+                    ><%= user.currentRole %></span
+                  >
+                </div>
+                <div class="flex items-center">
+                  <i
+                    class="fas fa-graduation-cap text-primary-500 mr-3 w-5"
+                  ></i>
+                  <span id="profileFieldDisplay" class="text-neutral-600"
+                    ><%= user.field %></span
+                  >
+                </div>
+                <div class="flex items-center">
+                  <i class="fas fa-calendar text-primary-500 mr-3 w-5"></i>
+                  <span id="memberSince" class="text-neutral-600"
+                    ><%= user.experience %></span
+                  >
+                </div>
+                <div class="flex items-center">
+                  <i
+                    class="fa-brands fa-linkedin text-primary-500 text-xl mr-3 w-5"
+                  ></i>
+                  <span id="linkedin" class="text-neutral-600"
+                    ><a href="<%= user.linkedin %>"
+                      ><%= user.linkedin %></a
+                    ></span
+                  >
+                </div>
+              </div>
+            </div>
+
+            <!-- Areas of Expertise -->
+            <div class="border-t border-neutral-200 pt-6">
+              <h3 class="text-lg font-semibold text-neutral-800 mb-4">
+                <i class="fas fa-tools text-secondary-500 mr-2"></i>
+                Areas of Expertise
+              </h3>
+              <div id="areasList" class="flex flex-wrap gap-2">
+                <% if(user.mentoringAreas && user.mentoringAreas.length > 0) {
+                %> <% user.mentoringAreas.forEach(area => { %>
+                <span
+                  class="bg-primary-50 text-primary-700 px-3 py-1 rounded-full text-sm font-medium hover:bg-primary-200 transition-colors"
+                >
+                  <%= area %>
+                </span>
+                <% }) %> <% } else { %>
+                <span>No areas selected</span>
+                <% } %>
+              </div>
+            </div>
+          </div>
+
+            <!-- Ratings & Reviews -->
+            <div class="border-t border-neutral-200 pt-6" id="reviewsSection">
+              <h3 class="text-lg font-semibold text-neutral-800 mb-4">
+                <i class="fas fa-star text-yellow-400 mr-2"></i>
+                Ratings &amp; Reviews
+              </h3>
+              <div id="ratingsSummary" class="flex items-center gap-4 mb-4">
+                <div class="text-center">
+                  <p id="avgRatingDisplay" class="text-4xl font-bold text-neutral-800 font-heading">—</p>
+                  <div id="starsDisplay" class="flex gap-0.5 justify-center my-1"></div>
+                  <p id="reviewCountDisplay" class="text-neutral-400 text-xs">0 reviews</p>
+                </div>
+                <div id="ratingBars" class="flex-1 space-y-1 text-xs text-neutral-500"></div>
+              </div>
+              <div id="reviewsList" class="space-y-3 max-h-64 overflow-y-auto pr-1">
+                <p class="text-neutral-400 text-sm">Loading reviews...</p>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="border-t border-neutral-200 pt-6 mt-8">
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <button
+                onclick="window.location.href='/view-requests/<%= userId %>'"
+                class="border border-primary-500 text-primary-500 px-6 py-3 rounded-lg font-medium hover:bg-primary-50 transition-colors"
+              >
+                <i class="fas fa-inbox mr-2"></i>
+                View Requests
+              </button>
+              <button
+                onclick="window.location.href='/mentor-bookings/<%= userId %>'"
+                class="border border-secondary-500 text-secondary-600 px-6 py-3 rounded-lg font-medium hover:bg-secondary-50 transition-colors"
+              >
+                <i class="fas fa-calendar mr-2"></i>
+                Scheduled Meetings
+              </button>
+              <!-- Add this button in the action buttons section -->
+              <button
+                onclick="window.location.href='/mentor-chats/<%= userId %>'"
+                class="bg-primary-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-600 transition-colors"
+              >
+                <i class="fas fa-comments mr-2"></i>
+                My Chats
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      // Define the logout function
+      async function logout() {
+        const res = await fetch("/logout", { method: "POST" });
+        if (res.ok) window.location.href = "/login";
+      }
+
+      // Also attach it via event listener as backup
+      document.getElementById("logoutbtn").addEventListener("click", logout);
+
+      document.addEventListener("DOMContentLoaded", function () {
+        setupMobileMenu();
+        loadReviews();
+      });
+
+      async function loadReviews() {
+        try {
+          const res  = await fetch(`/mentor-reviews/<%= userId %>`);
+          const data = await res.json();
+          if (!data.success) return;
+
+          const { reviews, avgRating, totalReviews } = data;
+
+          // Summary
+          document.getElementById('avgRatingDisplay').textContent = totalReviews > 0 ? avgRating.toFixed(1) : '—';
+          document.getElementById('reviewCountDisplay').textContent = `${totalReviews} review${totalReviews !== 1 ? 's' : ''}`;
+
+          // Stars display
+          const starsEl = document.getElementById('starsDisplay');
+          starsEl.innerHTML = [1,2,3,4,5].map(i => {
+            const filled = avgRating >= i ? 'text-yellow-400' : avgRating >= i - 0.5 ? 'text-yellow-300' : 'text-neutral-200';
+            return `<i class="fas fa-star ${filled} text-sm"></i>`;
+          }).join('');
+
+          // Rating bars (5 down to 1)
+          const counts = [5,4,3,2,1].map(star => ({
+            star,
+            count: reviews.filter(r => r.rating === star).length
+          }));
+          const barsEl = document.getElementById('ratingBars');
+          barsEl.innerHTML = counts.map(({ star, count }) => {
+            const pct = totalReviews > 0 ? Math.round((count / totalReviews) * 100) : 0;
+            return `<div class="flex items-center gap-2">
+              <span class="w-4 text-right">${star}</span>
+              <i class="fas fa-star text-yellow-400 text-xs"></i>
+              <div class="flex-1 bg-neutral-100 rounded-full h-1.5">
+                <div class="bg-yellow-400 h-1.5 rounded-full" style="width:${pct}%"></div>
+              </div>
+              <span class="w-5 text-right">${count}</span>
+            </div>`;
+          }).join('');
+
+          // Individual reviews
+          const listEl = document.getElementById('reviewsList');
+          if (reviews.length === 0) {
+            listEl.innerHTML = '<p class="text-neutral-400 text-sm">No reviews yet.</p>';
+            return;
+          }
+          listEl.innerHTML = reviews.map(r => {
+            const stars = [1,2,3,4,5].map(i =>
+              `<i class="fas fa-star ${r.rating >= i ? 'text-yellow-400' : 'text-neutral-200'} text-xs"></i>`
+            ).join('');
+            const date = new Date(r.createdAt).toLocaleDateString('en-US',{month:'short',day:'numeric',year:'numeric'});
+            return `<div class="bg-neutral-50 rounded-xl p-4 border border-neutral-100">
+              <div class="flex items-center justify-between mb-1">
+                <span class="font-medium text-neutral-800 text-sm">${r.menteeName}</span>
+                <span class="text-neutral-400 text-xs">${date}</span>
+              </div>
+              <div class="flex gap-0.5 mb-2">${stars}</div>
+              ${r.comment ? `<p class="text-neutral-600 text-sm">${r.comment}</p>` : ''}
+            </div>`;
+          }).join('');
+        } catch (e) {
+          document.getElementById('reviewsList').innerHTML = '<p class="text-neutral-400 text-sm">Could not load reviews.</p>';
+        }
+      }
+
+      function setupMobileMenu() {
+        const mobileMenuButton = document.getElementById("mobile-menu-button");
+        const mobileMenu = document.getElementById("mobile-menu");
+
+        if (mobileMenuButton && mobileMenu) {
+          mobileMenuButton.addEventListener("click", () => {
+            mobileMenu.classList.toggle("hidden");
+          });
+
+          document.addEventListener("click", (e) => {
+            if (
+              !mobileMenuButton.contains(e.target) &&
+              !mobileMenu.contains(e.target)
+            ) {
+              mobileMenu.classList.add("hidden");
+            }
+          });
+        }
+      }
+    </script>
+  </body>
+</html>

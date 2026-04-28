@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Login - Mentorise</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: { 50: "#f0f4ff", 500: "#3A5BA0", 600: "#2F3C7E", 700: "#1e2a4a" },
+              secondary: { 50: "#fffbf0", 500: "#FFD447", 600: "#e6bf40" },
+              neutral: { 50: "#F5F7FA", 100: "#e5e7eb", 200: "#d1d5db", 600: "#555555", 800: "#222222" },
+            },
+            fontFamily: {
+              heading: ["Poppins", "Inter", "sans-serif"],
+              body: ["Roboto", "Open Sans", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet"/>
+  </head>
+  <body class="bg-neutral-50 font-body min-h-screen">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <div class="flex items-center">
+            <a href="/home" class="flex-shrink-0">
+              <h1 class="text-2xl font-bold text-primary-500 font-heading">Mentorise</h1>
+            </a>
+          </div>
+          <div class="hidden md:flex items-center space-x-4">
+            <a href="/home" class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+              Home
+            </a>
+            <a href="/signup" class="bg-primary-500 text-white px-6 py-2 rounded-full text-sm font-medium hover:bg-primary-600 transition-all duration-300 shadow-md">
+              Sign Up
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Login Section -->
+    <section class="py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-md mx-auto">
+        <div class="bg-white rounded-2xl shadow-xl p-8 border border-neutral-100">
+
+          <!-- Header -->
+          <div class="text-center mb-8">
+            <h2 class="text-3xl font-bold text-neutral-800 font-heading mb-2">Welcome Back</h2>
+            <p class="text-neutral-600">Sign in to continue your mentorship journey</p>
+          </div>
+
+          <!-- Error message (shown on bad login) -->
+          <div id="errorMsg" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+
+          <!-- Login Form -->
+          <form class="space-y-6" id="loginForm" action="/login" method="post">
+
+            <!-- Email Field -->
+            <div>
+              <label for="email" class="block text-sm font-medium text-neutral-700 mb-2">Email Address</label>
+              <div class="relative">
+                <input
+                  type="email" id="email" name="email" required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Enter your email"
+                />
+                <i class="fas fa-envelope absolute right-3 top-3.5 text-neutral-400"></i>
+              </div>
+            </div>
+
+            <!-- Password Field -->
+            <div>
+              <label for="password" class="block text-sm font-medium text-neutral-700 mb-2">Password</label>
+              <div class="relative">
+                <input
+                  type="password" id="password" name="password" required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Enter your password"
+                />
+                <button type="button" id="togglePassword" class="absolute right-3 top-3.5 text-neutral-400 hover:text-neutral-600">
+                  <i class="fas fa-eye" id="eyeIcon"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Remember Me -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center">
+                <input id="remember" name="remember" type="checkbox" class="h-4 w-4 text-primary-500 focus:ring-primary-500 border-neutral-300 rounded"/>
+                <label for="remember" class="ml-2 block text-sm text-neutral-700">Remember me</label>
+              </div>
+              <button type="button" onclick="openForgotModal()" class="text-sm text-primary-500 hover:text-primary-600 font-medium">Forgot password?</button>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="button"
+              onclick="startLoginOTPFlow()"
+              class="w-full bg-primary-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+            >
+              Sign In
+            </button>
+          </form>
+
+          <!-- Sign Up Link -->
+          <div class="mt-8 text-center">
+            <p class="text-neutral-600">
+              Don't have an account?
+              <a href="/signup" class="text-primary-500 hover:text-primary-600 font-medium">Sign up here</a>
+            </p>
+          </div>
+        </div>
+
+        <div class="mt-8 text-center">
+          <p class="text-sm text-neutral-500">
+            By signing in, you agree to our
+            <a href="#" class="text-primary-500 hover:text-primary-600">Terms of Service</a>
+            and
+            <a href="#" class="text-primary-500 hover:text-primary-600">Privacy Policy</a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ─── OTP Modal ─────────────────────────────────────────────────────── -->
+    <div id="otpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center px-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+
+        <!-- Step 1: Confirm email & send OTP -->
+        <div id="otpStep1">
+          <h3 class="text-2xl font-bold text-neutral-800 font-heading mb-2 text-center">Verify Your Email</h3>
+          <p class="text-neutral-600 text-sm text-center mb-6">We'll send a 6-digit OTP to confirm it's you.</p>
+          <div class="bg-primary-50 rounded-lg px-4 py-3 mb-4 text-primary-700 text-sm font-medium" id="otpEmailDisplay"></div>
+          <div id="otpStep1Error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+          <button id="sendOtpBtn" onclick="sendOTP()" class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition-all duration-300">
+            Send OTP
+          </button>
+          <button onclick="closeOTPModal()" class="w-full mt-3 py-3 text-neutral-600 hover:text-neutral-800 text-sm font-medium">Cancel</button>
+        </div>
+
+        <!-- Step 2: Enter OTP -->
+        <div id="otpStep2" class="hidden">
+          <h3 class="text-2xl font-bold text-neutral-800 font-heading mb-2 text-center">Enter OTP</h3>
+          <p class="text-neutral-600 text-sm text-center mb-1">A 6-digit code was sent to</p>
+          <p class="text-primary-500 font-medium text-center mb-6 text-sm" id="otpSentToLabel"></p>
+
+          <div class="flex justify-center gap-2 mb-4">
+            <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+            <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+            <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+            <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+            <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+            <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+          </div>
+
+          <p class="text-center text-sm text-neutral-500 mb-2">
+            OTP expires in <span id="otpTimer" class="font-semibold text-primary-500">10:00</span>
+          </p>
+
+          <div id="otpStep2Error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+
+          <button id="verifyOtpBtn" onclick="verifyOTP()" class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition-all duration-300 mb-3">
+            Verify & Sign In
+          </button>
+
+          <div class="text-center">
+            <button id="resendBtn" onclick="resendOTP()" disabled class="text-sm text-primary-500 hover:text-primary-600 font-medium disabled:text-neutral-400">
+              Resend OTP
+            </button>
+          </div>
+
+          <button onclick="closeOTPModal()" class="w-full mt-2 py-3 text-neutral-600 hover:text-neutral-800 text-sm font-medium">Cancel</button>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      // Password toggle
+      document.getElementById('togglePassword').addEventListener('click', function () {
+        const input = document.getElementById('password');
+        const icon = document.getElementById('eyeIcon');
+        const isPassword = input.getAttribute('type') === 'password';
+        input.setAttribute('type', isPassword ? 'text' : 'password');
+        icon.classList.toggle('fa-eye', !isPassword);
+        icon.classList.toggle('fa-eye-slash', isPassword);
+      });
+
+      // ─── OTP Flow ────────────────────────────────────────────────────────────
+      let otpTimerInterval = null;
+
+      function startLoginOTPFlow() {
+        const email = document.getElementById('email').value.trim();
+        const password = document.getElementById('password').value.trim();
+        const errorMsg = document.getElementById('errorMsg');
+
+        if (!email || !password) {
+          errorMsg.textContent = 'Please fill in all fields.';
+          errorMsg.classList.remove('hidden');
+          return;
+        }
+        errorMsg.classList.add('hidden');
+
+        document.getElementById('otpEmailDisplay').textContent = 'Sending OTP to: ' + email;
+        document.getElementById('otpSentToLabel').textContent = email;
+
+        document.getElementById('otpStep1').classList.remove('hidden');
+        document.getElementById('otpStep2').classList.add('hidden');
+        document.getElementById('otpStep1Error').classList.add('hidden');
+        document.getElementById('otpStep2Error').classList.add('hidden');
+        clearOTPBoxes();
+
+        document.getElementById('otpModal').classList.remove('hidden');
+      }
+
+      function closeOTPModal() {
+        document.getElementById('otpModal').classList.add('hidden');
+        clearInterval(otpTimerInterval);
+      }
+
+      async function sendOTP() {
+        const email = document.getElementById('email').value.trim();
+        const btn = document.getElementById('sendOtpBtn');
+        const errorDiv = document.getElementById('otpStep1Error');
+
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        errorDiv.classList.add('hidden');
+
+        try {
+          const res = await fetch('/send-login-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const data = await res.json();
+
+          if (!data.success) {
+            errorDiv.textContent = data.message;
+            errorDiv.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Send OTP';
+            return;
+          }
+
+          document.getElementById('otpStep1').classList.add('hidden');
+          document.getElementById('otpStep2').classList.remove('hidden');
+          startOTPTimer(600);
+          document.querySelectorAll('.otp-box')[0].focus();
+
+        } catch (err) {
+          errorDiv.textContent = 'Network error. Please try again.';
+          errorDiv.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Send OTP';
+        }
+      }
+
+      async function verifyOTP() {
+        const email = document.getElementById('email').value.trim();
+        const otp = Array.from(document.querySelectorAll('.otp-box')).map(b => b.value).join('');
+        const btn = document.getElementById('verifyOtpBtn');
+        const errorDiv = document.getElementById('otpStep2Error');
+
+        if (otp.length < 6) {
+          errorDiv.textContent = 'Please enter the complete 6-digit OTP.';
+          errorDiv.classList.remove('hidden');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Verifying...';
+        errorDiv.classList.add('hidden');
+
+        try {
+          const res = await fetch('/verify-login-otp', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp })
+          });
+          const data = await res.json();
+
+          if (!data.success) {
+            errorDiv.textContent = data.message;
+            errorDiv.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Verify & Sign In';
+            document.querySelectorAll('.otp-box').forEach(b => {
+              b.classList.add('border-red-400');
+              setTimeout(() => b.classList.remove('border-red-400'), 1500);
+            });
+            return;
+          }
+
+          clearInterval(otpTimerInterval);
+          closeOTPModal();
+          document.getElementById('loginForm').submit();
+
+        } catch (err) {
+          errorDiv.textContent = 'Network error. Please try again.';
+          errorDiv.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Verify & Sign In';
+        }
+      }
+
+      async function resendOTP() {
+        clearOTPBoxes();
+        document.getElementById('otpStep2Error').classList.add('hidden');
+        document.getElementById('resendBtn').disabled = true;
+        clearInterval(otpTimerInterval);
+        await sendOTP();
+      }
+
+      function clearOTPBoxes() {
+        document.querySelectorAll('.otp-box').forEach(b => b.value = '');
+      }
+
+      function startOTPTimer(seconds) {
+        let remaining = seconds;
+        const timerEl = document.getElementById('otpTimer');
+        const resendBtn = document.getElementById('resendBtn');
+
+        resendBtn.disabled = true;
+        timerEl.classList.remove('text-red-500');
+        timerEl.classList.add('text-primary-500');
+
+        otpTimerInterval = setInterval(() => {
+          remaining--;
+          const m = Math.floor(remaining / 60).toString().padStart(2, '0');
+          const s = (remaining % 60).toString().padStart(2, '0');
+          timerEl.textContent = `${m}:${s}`;
+
+          if (remaining <= 0) {
+            clearInterval(otpTimerInterval);
+            timerEl.textContent = 'Expired';
+            timerEl.classList.remove('text-primary-500');
+            timerEl.classList.add('text-red-500');
+            resendBtn.disabled = false;
+          }
+        }, 1000);
+      }
+
+      // OTP box: auto-advance, backspace, paste
+      document.addEventListener('DOMContentLoaded', () => {
+        const boxes = document.querySelectorAll('.otp-box');
+        boxes.forEach((box, i) => {
+          box.addEventListener('input', () => {
+            box.value = box.value.replace(/\D/g, '');
+            if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+          });
+          box.addEventListener('keydown', (e) => {
+            if (e.key === 'Backspace' && !box.value && i > 0) boxes[i - 1].focus();
+            if (e.key === 'Enter') verifyOTP();
+          });
+          box.addEventListener('paste', (e) => {
+            e.preventDefault();
+            const pasted = e.clipboardData.getData('text').replace(/\D/g, '').slice(0, 6);
+            pasted.split('').forEach((char, idx) => { if (boxes[idx]) boxes[idx].value = char; });
+            boxes[Math.min(pasted.length, 5)].focus();
+          });
+        });
+      });
+    </script>
+  
+    <!-- ─── Forgot Password Modal ──────────────────────────────────────── -->
+    <div id="forgotModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center px-4">
+      <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+
+        <!-- Step 1: Enter email -->
+        <div id="forgotStep1">
+          <div class="text-center mb-6">
+            <div class="w-16 h-16 bg-primary-50 rounded-full flex items-center justify-center mx-auto mb-4">
+              <i class="fas fa-lock text-primary-500 text-2xl"></i>
+            </div>
+            <h3 class="text-2xl font-bold text-neutral-800 font-heading mb-2">Forgot Password?</h3>
+            <p class="text-neutral-600 text-sm">Enter your registered email and we'll send you a link to reset your password.</p>
+          </div>
+          <div id="forgotStep1Error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+          <div id="forgotStep1Success" class="hidden bg-green-50 border border-green-200 text-green-700 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+          <div class="mb-4">
+            <label class="block text-sm font-medium text-neutral-700 mb-2">Email Address</label>
+            <div class="relative">
+              <input type="email" id="forgotEmail" placeholder="Enter your registered email"
+                class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors" />
+              <i class="fas fa-envelope absolute right-3 top-3.5 text-neutral-400"></i>
+            </div>
+          </div>
+          <button id="sendResetBtn" onclick="sendResetLink()"
+            class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition-all duration-300">
+            Send Reset Link
+          </button>
+          <button onclick="closeForgotModal()" class="w-full mt-3 py-3 text-neutral-600 hover:text-neutral-800 text-sm font-medium">
+            Back to Login
+          </button>
+        </div>
+
+        <!-- Step 2: Email sent confirmation -->
+        <div id="forgotStep2" class="hidden text-center">
+          <div class="w-20 h-20 bg-green-50 rounded-full flex items-center justify-center mx-auto mb-6">
+            <i class="fas fa-paper-plane text-green-500 text-3xl"></i>
+          </div>
+          <h3 class="text-2xl font-bold text-neutral-800 font-heading mb-3">Check Your Email</h3>
+          <p class="text-neutral-600 text-sm mb-2">We've sent a password reset link to</p>
+          <p class="text-primary-500 font-semibold mb-6" id="forgotSentTo"></p>
+          <p class="text-neutral-500 text-xs mb-6">The link expires in <strong>15 minutes</strong>. Check your spam folder if you don't see it.</p>
+          <button onclick="closeForgotModal()"
+            class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition-all duration-300">
+            Back to Login
+          </button>
+        </div>
+
+      </div>
+    </div>
+
+    <script>
+      // ─── Forgot Password Flow ─────────────────────────────────────────────────
+      function openForgotModal() {
+        document.getElementById('forgotEmail').value = document.getElementById('email').value || '';
+        document.getElementById('forgotStep1').classList.remove('hidden');
+        document.getElementById('forgotStep2').classList.add('hidden');
+        document.getElementById('forgotStep1Error').classList.add('hidden');
+        document.getElementById('forgotStep1Success').classList.add('hidden');
+        const btn = document.getElementById('sendResetBtn');
+        btn.disabled = false;
+        btn.textContent = 'Send Reset Link';
+        document.getElementById('forgotModal').classList.remove('hidden');
+      }
+
+      function closeForgotModal() {
+        document.getElementById('forgotModal').classList.add('hidden');
+      }
+
+      async function sendResetLink() {
+        const email = document.getElementById('forgotEmail').value.trim();
+        const btn = document.getElementById('sendResetBtn');
+        const errorDiv = document.getElementById('forgotStep1Error');
+        const successDiv = document.getElementById('forgotStep1Success');
+
+        if (!email) {
+          errorDiv.textContent = 'Please enter your email address.';
+          errorDiv.classList.remove('hidden');
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = 'Sending...';
+        errorDiv.classList.add('hidden');
+        successDiv.classList.add('hidden');
+
+        try {
+          const res = await fetch('/forgot-password', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+          });
+          const data = await res.json();
+
+          if (!data.success) {
+            errorDiv.textContent = data.message;
+            errorDiv.classList.remove('hidden');
+            btn.disabled = false;
+            btn.textContent = 'Send Reset Link';
+            return;
+          }
+
+          document.getElementById('forgotSentTo').textContent = email;
+          document.getElementById('forgotStep1').classList.add('hidden');
+          document.getElementById('forgotStep2').classList.remove('hidden');
+
+        } catch (err) {
+          errorDiv.textContent = 'Network error. Please try again.';
+          errorDiv.classList.remove('hidden');
+          btn.disabled = false;
+          btn.textContent = 'Send Reset Link';
+        }
+      }
+
+      // Close modal on backdrop click
+      document.getElementById('forgotModal').addEventListener('click', function(e) {
+        if (e.target === this) closeForgotModal();
+      });
+    </script>
+
+  </body>
+</html>

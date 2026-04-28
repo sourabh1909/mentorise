@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <!-- Basic Meta Tags -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up - Mentorise</title>
+
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Custom Tailwind Configuration -->
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            // Custom Color Palette
+            colors: {
+              primary: {
+                50: "#f0f4ff", // Light blue tint
+                500: "#3A5BA0", // Main brand blue
+                600: "#2F3C7E", // Darker blue for hover states
+                700: "#1e2a4a", // Deep blue for accents
+              },
+              secondary: {
+                50: "#fffbf0", // Light yellow tint
+                500: "#FFD447", // Main accent yellow
+                600: "#e6bf40", // Darker yellow for hover states
+              },
+              neutral: {
+                50: "#F5F7FA", // Very light gray background
+                100: "#e5e7eb", // Light gray
+                200: "#d1d5db", // Medium light gray
+                600: "#555555", // Dark gray text
+                800: "#222222", // Very dark gray/black
+              },
+            },
+            // Custom Font Families
+            fontFamily: {
+              heading: ["Poppins", "Inter", "sans-serif"], // For headings and titles
+              body: ["Roboto", "Open Sans", "sans-serif"], // For body text
+            },
+          },
+        },
+      };
+    </script>
+
+    <!-- External Stylesheets -->
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-neutral-50 font-body min-h-screen">
+    <!-- Navigation Bar -->
+    <nav class="bg-white shadow-sm">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex justify-between items-center h-16">
+          <!-- Logo/Brand -->
+          <div class="flex items-center">
+            <!-- <a href="/home" -->
+            <a href="/home" class="flex-shrink-0"> 
+              <h1 class="text-2xl font-bold text-primary-500 font-heading">
+                Mentorise
+              </h1>
+            </a>
+          </div>
+
+          <!-- Navigation Links -->
+          <div class="hidden md:flex items-center space-x-4">
+            <a
+              href="/home"
+              class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Home
+            </a>
+            <!-- href='/login' -->
+            <a
+            
+              href="Login.html"
+              class="text-neutral-800 hover:text-primary-500 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+            >
+              Log In
+            </a>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Signup Section -->
+    <section class="py-12 px-4 sm:px-6 lg:px-8">
+      <div class="max-w-4xl mx-auto">
+        <!-- Header -->
+        <div class="text-center mb-8">
+          <h2 class="text-3xl font-bold text-neutral-800 font-heading mb-2">
+            Join the Mentorise Community
+          </h2>
+          <p class="text-neutral-600">
+            Choose your path and start your mentorship journey
+          </p>
+        </div>
+
+        <!-- User Type Selection -->
+        <div
+          class="bg-white rounded-2xl shadow-xl p-8 border border-neutral-100 mb-8"
+        >
+          <div class="text-center mb-6">
+            <h3 class="text-xl font-semibold text-neutral-800 mb-2">
+              I want to join as:
+            </h3>
+            <p class="text-neutral-600 text-sm">
+              Select your role to see the relevant signup form
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Mentee Option -->
+            <label class="relative cursor-pointer">
+              <input
+                type="radio"
+                name="userType"
+                value="mentee"
+                class="sr-only"
+                checked
+                onchange="toggleForm('mentee')"
+              />
+              <div
+                id="mentee-card"
+                class="user-type-card border-2 border-primary-500 rounded-xl p-6 bg-primary-50 hover:bg-primary-100 transition-all duration-300"
+              >
+                <div class="text-center">
+                  <i
+                    class="fas fa-user-graduate text-3xl text-primary-500 mb-3"
+                  ></i>
+                  <h4 class="font-semibold text-neutral-800 text-lg mb-1">
+                    Mentee
+                  </h4>
+                  <p class="text-sm text-neutral-600">
+                    Looking for guidance and mentorship
+                  </p>
+                </div>
+              </div>
+            </label>
+
+            <!-- Mentor Option -->
+            <label class="relative cursor-pointer">
+              <input
+                type="radio"
+                name="userType"
+                value="mentor"
+                class="sr-only"
+                onchange="toggleForm('mentor')"
+              />
+              <div
+                id="mentor-card"
+                class="user-type-card border-2 border-neutral-200 rounded-xl p-6 hover:border-primary-300 hover:bg-neutral-50 transition-all duration-300"
+              >
+                <div class="text-center">
+                  <i
+                    class="fas fa-chalkboard-teacher text-3xl text-primary-500 mb-3"
+                  ></i>
+                  <h4 class="font-semibold text-neutral-800 text-lg mb-1">
+                    Mentor
+                  </h4>
+                  <p class="text-sm text-neutral-600">
+                    Ready to share knowledge and experience
+                  </p>
+                </div>
+              </div>
+            </label>
+          </div>
+        </div>
+
+        <!-- Mentee Form -->
+        <div
+          id="mentee-form"
+          class="bg-white rounded-2xl shadow-xl p-8 border border-neutral-100"
+        >
+          <div class="text-center mb-8">
+            <h3 class="text-2xl font-bold text-neutral-800 font-heading mb-2">
+              Mentee Registration
+            </h3>
+            <p class="text-neutral-600">
+              Tell us about yourself to find the perfect mentors
+            </p>
+          </div>
+<!-- /signup -->
+          <form class="space-y-6" id="menteeSignupForm" action="/signup" method="post">
+            <input type="hidden" name="userType" value="mentee" />
+            <!-- Name Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  for="menteeFirstName"
+                  class="block text-sm font-medium text-neutral-700 mb-2"
+                >
+                  First Name *
+                </label>
+                <input
+                  type="text"
+                  id="menteeFirstName"
+                  name="firstName"
+                  required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Enter your first name"
+                />
+              </div>
+              <div>
+                <label
+                  for="menteeLastName"
+                  class="block text-sm font-medium text-neutral-700 mb-2"
+                >
+                  Last Name *
+                </label>
+                <input
+                  type="text"
+                  id="menteeLastName"
+                  name="lastName"
+                  required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Enter your last name"
+                />
+              </div>
+            </div>
+
+            <!-- img url Field -->
+            <div>
+              <label
+                for="menteeImg"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Profile pic URL
+              </label>
+              <div class="relative">
+                <input
+                  type="text"
+                  id="menteeImg"
+                  name="img"
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                />
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">
+                insert image address
+              </p>
+            </div>
+
+            <!-- Email Field -->
+            <div>
+              <label
+                for="menteeEmail"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Email Address *
+              </label>
+              <div class="relative">
+                <input
+                  type="email"
+                  id="menteeEmail"
+                  name="email"
+                  required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="your.email@college.edu"
+                />
+                <i
+                  class="fas fa-envelope absolute right-3 top-3.5 text-neutral-400"
+                ></i>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">
+                Use your college or work email for verification
+              </p>
+            </div>
+
+            <!-- College/University Field -->
+            <div>
+              <label
+                for="menteeCollege"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                College / University *
+              </label>
+              <select
+                id="menteeCollege"
+                name="college"
+                required
+                class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              >
+                <option value="">Select your college/university</option>
+                <option value="kitcoe-kolhapur">KITCOE Kolhapur</option>
+                <option value="dyp-kolhapur">DYP Kolhapur</option>
+                <option value="wce-sangli">WCE Sangli</option>
+                <option value="coep-pune">COEP Pune</option>
+                <option value="pict-pune">PICT Pune</option>
+                <option value="vit-pune">VIT Pune</option>
+                <option value="iit-bombay">IIT Bombay</option>
+                <option value="iit-delhi">IIT Delhi</option>
+                <option value="iit-madras">IIT Madras</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+
+            <!-- Year of Study Field -->
+            <div>
+              <label
+                for="menteeYear"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Year of Study / Position *
+              </label>
+              <select
+                id="menteeYear"
+                name="yearOfStudy"
+                required
+                class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              >
+                <option value="">Select your current year/position</option>
+                <option value="1st-year">1st Year</option>
+                <option value="2nd-year">2nd Year</option>
+                <option value="3rd-year">3rd Year</option>
+                <option value="4th-year">4th Year</option>
+                <option value="masters">Masters Student</option>
+                <option value="phd">PhD Student</option>
+              </select>
+            </div>
+
+            <!-- Password Field -->
+            <div>
+              <label
+                for="menteePassword"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Password *
+              </label>
+              <div class="relative">
+                <input
+                  type="password"
+                  id="menteePassword"
+                  name="password"
+                  required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Create a strong password"
+                />
+                <button
+                  type="button"
+                  onclick="togglePasswordVisibility('menteePassword')"
+                  class="absolute right-3 top-3.5 text-neutral-400 hover:text-neutral-600"
+                >
+                  <i class="fas fa-eye" id="menteeEyeIcon"></i>
+                </button>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">
+                Password must be of minimum 6 charater
+              </p>
+            </div>
+
+            <!-- Areas of Interest -->
+            <div>
+              <label class="block text-sm font-medium text-neutral-700 mb-2">
+                Areas of Interest / Guidance Needed *
+              </label>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="areasOfInterest"
+                    value="higher-studies"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Higher Studies</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="areasOfInterest"
+                    value="interview-prep"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Interview Prep</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="areasOfInterest"
+                    value="startup-entrepreneurship"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Startup & Entrepreneurship</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="areasOfInterest"
+                    value="technical-skills"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Technical Skills</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="areasOfInterest"
+                    value="academic-support"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Academic Support</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="areasOfInterest"
+                    value="personal-growth"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Personal Growth</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="areasOfInterest"
+                    value="career-guidance"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Career Guidance</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="areasOfInterest"
+                    value="research"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Research</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="areasOfInterest"
+                    value="networking"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Networking</span>
+                </label>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">
+                Select all areas where you need guidance
+              </p>
+            </div>
+
+            <!-- Submit Button -->
+            <button
+              type="button"
+              id="menteeVerifyBtn"
+              onclick="startOTPFlow('mentee')"
+              class="w-full bg-primary-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+            >
+              Join as Mentee
+            </button>
+          </form>
+        </div>
+
+        <!-- Mentor Form -->
+        <div
+          id="mentor-form"
+          class="bg-white rounded-2xl shadow-xl p-8 border border-neutral-100 hidden"
+        >
+          <div class="text-center mb-8">
+            <h3 class="text-2xl font-bold text-neutral-800 font-heading mb-2">
+              Mentor Registration
+            </h3>
+            <p class="text-neutral-600">
+              Share your expertise and help others grow
+            </p>
+          </div>
+<!-- /signup -->
+          <form class="space-y-6" id="mentorSignupForm" action="/signup" method="post">
+            <input type="hidden" name="userType" value="mentor" />
+            <!-- Name Fields -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label
+                  for="mentorFirstName"
+                  class="block text-sm font-medium text-neutral-700 mb-2"
+                >
+                  First Name *
+                </label>
+                <input
+                  type="text"
+                  id="mentorFirstName"
+                  name="firstName"
+                  required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Enter your first name"
+                />
+              </div>
+              <div>
+                <label
+                  for="mentorLastName"
+                  class="block text-sm font-medium text-neutral-700 mb-2"
+                >
+                  Last Name *
+                </label>
+                <input
+                  type="text"
+                  id="mentorLastName"
+                  name="lastName"
+                  required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Enter your last name"
+                />
+              </div>
+            </div>
+
+            <!-- img url Field -->
+            <div>
+              <label
+                for="mentorImg"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Profile pic URL
+              </label>
+              <div class="relative">
+                <input
+                  type="text"
+                  id="mentorImg"
+                  name="img"
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                />
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">
+                insert image address
+              </p>
+            </div>
+
+            <!-- Email Field -->
+            <div>
+              <label
+                for="mentorEmail"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Email Address *
+              </label>
+              <div class="relative">
+                <input
+                  type="email"
+                  id="mentorEmail"
+                  name="email"
+                  required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="your.email@college.edu"
+                />
+                <i
+                  class="fas fa-envelope absolute right-3 top-3.5 text-neutral-400"
+                ></i>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">
+                Use your college or work email for verification
+              </p>
+            </div>
+
+            <!-- Current Role/Position Field -->
+            <div>
+              <label
+                for="mentorRole"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Current Role / Position *
+              </label>
+              <input
+                type="text"
+                id="mentorRole"
+                name="currentRole"
+                required
+                class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                placeholder="e.g., Software Engineer, Research Scholar, Assistant Professor"
+              />
+            </div>
+
+            <!-- Field/Specialization -->
+            <div>
+              <label
+                for="mentorField"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Field / Specialization *
+              </label>
+              <input
+                type="text"
+                id="mentorField"
+                name="field"
+                placeholder="e.g. Web-developement"
+                required
+                class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              />
+            </div>
+
+            <!-- Experience -->
+            <div>
+              <label
+                for="mentorField"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Experience *
+              </label>
+              <input
+                type="text"
+                id="mentorExperience"
+                name="experience"
+                placeholder="e.g. 5 years"
+                required
+                class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              />
+            </div>
+
+            <!-- about -->
+            <div>
+              <label
+                for="mentorField"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                About yourself *
+              </label>
+              <textarea
+                name="about"
+                placeholder="Write a brief introduction about yourself, your experience, and your areas of expertise..."
+                id="mentorAbout"
+                required
+                class="w-full h-40 resize-none px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              ></textarea>
+            </div>
+
+            <!-- linkedin -->
+            <div>
+              <label
+                for="mentorField"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Linkedin *
+              </label>
+              <input
+                type="url"
+                id="mentorLinkedin"
+                name="linkedin"
+                placeholder="https://www.linkedin.com/in/your-profile"
+                required
+                class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+              />
+            </div>
+
+            <!-- Password Field -->
+            <div>
+              <label
+                for="mentorPassword"
+                class="block text-sm font-medium text-neutral-700 mb-2"
+              >
+                Password *
+              </label>
+              <div class="relative">
+                <input
+                  type="password"
+                  id="mentorPassword"
+                  name="password"
+                  required
+                  class="w-full px-4 py-3 border border-neutral-200 rounded-lg focus:ring-2 focus:ring-primary-500 focus:border-primary-500 transition-colors"
+                  placeholder="Create a strong password"
+                />
+                <button
+                  type="button"
+                  onclick="togglePasswordVisibility('mentorPassword')"
+                  class="absolute right-3 top-3.5 text-neutral-400 hover:text-neutral-600"
+                >
+                  <i class="fas fa-eye" id="mentorEyeIcon"></i>
+                </button>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">
+                Password must be of minimum 6 charater
+              </p>
+            </div>
+
+            <!-- Areas they can mentor in -->
+            <div>
+              <label class="block text-sm font-medium text-neutral-700 mb-2">
+                Areas you can mentor in *
+              </label>
+              <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="mentoringAreas"
+                    value="higher-studies"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Higher Studies</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="mentoringAreas"
+                    value="interview-prep"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Interview Prep</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="mentoringAreas"
+                    value="startup-entrepreneurship"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Startup & Entrepreneurship</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="mentoringAreas"
+                    value="technical-skills"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Technical Skills</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="mentoringAreas"
+                    value="academic-support"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Academic Support</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="mentoringAreas"
+                    value="personal-growth"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Personal Growth</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="mentoringAreas"
+                    value="career-guidance"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Career Guidance</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="mentoringAreas"
+                    value="research"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Research</span>
+                </label>
+                <label class="flex items-center">
+                  <input
+                    type="checkbox"
+                    name="mentoringAreas"
+                    value="networking"
+                    class="mr-2 text-primary-500"
+                  />
+                  <span class="text-sm">Networking</span>
+                </label>
+              </div>
+              <p class="text-xs text-neutral-500 mt-1">
+                Select all areas where you can provide guidance
+              </p>
+            </div>
+
+            <!-- Terms and Conditions -->
+            <!-- <div class="flex items-start">
+              <input
+                id="mentorTerms"
+                name="terms"
+                type="checkbox"
+                required
+                class="h-4 w-4 text-primary-500 focus:ring-primary-500 border-neutral-300 rounded mt-1"
+              />
+              <label for="mentorTerms" class="ml-2 block text-sm text-neutral-700">
+                I agree to the
+                <a href="#" class="text-primary-500 hover:text-primary-600">Terms of Service</a>
+                and
+                <a href="#" class="text-primary-500 hover:text-primary-600">Privacy Policy</a>
+              </label>
+            </div> -->
+
+            <!-- Submit Button -->
+            <button
+              type="button"
+              id="mentorVerifyBtn"
+              onclick="startOTPFlow('mentor')"
+              class="w-full bg-primary-500 text-white py-3 px-4 rounded-lg font-semibold hover:bg-primary-600 focus:ring-2 focus:ring-primary-500 focus:ring-offset-2 transition-all duration-300 transform hover:scale-105"
+            >
+              Join as Mentor
+            </button>
+          </form>
+        </div>
+
+        <!-- ─── OTP Modal ───────────────────────────────────────────── -->
+        <div id="otpModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center px-4">
+          <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+
+            <!-- Step 1: Enter email to send OTP -->
+            <div id="otpStep1">
+              <h3 class="text-2xl font-bold text-neutral-800 font-heading mb-2 text-center">Verify Your Email</h3>
+              <p class="text-neutral-600 text-sm text-center mb-6">We'll send a 6-digit OTP to confirm your email address.</p>
+
+              <div class="bg-primary-50 rounded-lg px-4 py-3 mb-4 text-primary-700 text-sm font-medium" id="otpEmailDisplay"></div>
+
+              <div id="otpStep1Error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+
+              <button
+                id="sendOtpBtn"
+                onclick="sendOTP()"
+                class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition-all duration-300"
+              >
+                Send OTP
+              </button>
+
+              <button onclick="closeOTPModal()" class="w-full mt-3 py-3 text-neutral-600 hover:text-neutral-800 text-sm font-medium">
+                Cancel
+              </button>
+            </div>
+
+            <!-- Step 2: Enter OTP -->
+            <div id="otpStep2" class="hidden">
+              <h3 class="text-2xl font-bold text-neutral-800 font-heading mb-2 text-center">Enter OTP</h3>
+              <p class="text-neutral-600 text-sm text-center mb-1">A 6-digit code was sent to</p>
+              <p class="text-primary-500 font-medium text-center mb-6 text-sm" id="otpSentToLabel"></p>
+
+              <!-- 6-box OTP input -->
+              <div class="flex justify-center gap-2 mb-4" id="otpBoxes">
+                <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+                <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+                <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+                <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+                <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+                <input type="text" maxlength="1" class="otp-box w-12 h-12 text-center text-xl font-bold border-2 border-neutral-200 rounded-lg focus:outline-none focus:border-primary-500 transition-colors" />
+              </div>
+
+              <!-- Countdown timer -->
+              <p class="text-center text-sm text-neutral-500 mb-2">
+                OTP expires in <span id="otpTimer" class="font-semibold text-primary-500">10:00</span>
+              </p>
+
+              <div id="otpStep2Error" class="hidden bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg mb-4 text-sm"></div>
+
+              <button
+                id="verifyOtpBtn"
+                onclick="verifyOTP()"
+                class="w-full bg-primary-500 text-white py-3 rounded-lg font-semibold hover:bg-primary-600 transition-all duration-300 mb-3"
+              >
+                Verify & Create Account
+              </button>
+
+              <div class="text-center">
+                <button onclick="resendOTP()" id="resendBtn" class="text-sm text-primary-500 hover:text-primary-600 font-medium disabled:text-neutral-400" disabled>
+                  Resend OTP
+                </button>
+              </div>
+
+              <button onclick="closeOTPModal()" class="w-full mt-2 py-3 text-neutral-600 hover:text-neutral-800 text-sm font-medium">
+                Cancel
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Login Link -->
+        <div class="mt-8 text-center">
+          <p class="text-neutral-600">
+            Already have an account?
+            <!-- '/login' -->
+            <a
+              href="Login.html"
+              class="text-primary-500 hover:text-primary-600 font-medium"
+            >
+              Log in here
+            </a>
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <script>
+      // Toggle between mentee and mentor forms
+      function toggleForm(userType) {
+        const menteeForm = document.getElementById("mentee-form");
+        const mentorForm = document.getElementById("mentor-form");
+        const menteeCard = document.getElementById("mentee-card");
+        const mentorCard = document.getElementById("mentor-card");
+
+        if (userType === "mentee") {
+          menteeForm.classList.remove("hidden");
+          mentorForm.classList.add("hidden");
+          menteeCard.classList.add("border-primary-500", "bg-primary-50");
+          menteeCard.classList.remove("border-neutral-200");
+          mentorCard.classList.remove("border-primary-500", "bg-primary-50");
+          mentorCard.classList.add("border-neutral-200");
+        } else {
+          menteeForm.classList.add("hidden");
+          mentorForm.classList.remove("hidden");
+          mentorCard.classList.add("border-primary-500", "bg-primary-50");
+          mentorCard.classList.remove("border-neutral-200");
+          menteeCard.classList.remove("border-primary-500", "bg-primary-50");
+          menteeCard.classList.add("border-neutral-200");
+        }
+      }
+
+      // Password visibility toggle
+      function togglePasswordVisibility(passwordId) {
+        const passwordInput = document.getElementById(passwordId);
+        const eyeIcon = document.getElementById(
+          passwordId.replace("Password", "EyeIcon")
+        );
+        const type = passwordInput.getAttribute("type") === "password" ? "text" : "password";
+        passwordInput.setAttribute("type", type);
+        if (type === "password") {
+          eyeIcon.classList.remove("fa-eye-slash");
+          eyeIcon.classList.add("fa-eye");
+        } else {
+          eyeIcon.classList.remove("fa-eye");
+          eyeIcon.classList.add("fa-eye-slash");
+        }
+      }
+
+      // ─── OTP Flow (shared for mentee & mentor) ──────────────────────────────
+      let otpTimerInterval = null;
+      let activeFormType = null; // 'mentee' or 'mentor'
+
+      function startOTPFlow(formType) {
+        activeFormType = formType;
+        const form = document.getElementById(formType + "SignupForm");
+
+        if (!form.checkValidity()) {
+          form.reportValidity();
+          return;
+        }
+
+        const email = document.getElementById(formType + "Email").value.trim();
+        document.getElementById("otpEmailDisplay").textContent = "Sending OTP to: " + email;
+        document.getElementById("otpSentToLabel").textContent = email;
+
+        // Reset modal state
+        document.getElementById("otpStep1").classList.remove("hidden");
+        document.getElementById("otpStep2").classList.add("hidden");
+        document.getElementById("otpStep1Error").classList.add("hidden");
+        document.getElementById("otpStep2Error").classList.add("hidden");
+        clearOTPBoxes();
+
+        document.getElementById("otpModal").classList.remove("hidden");
+      }
+
+      // keep old name as alias just in case
+      function startMentorOTPFlow() { startOTPFlow('mentor'); }
+
+      function closeOTPModal() {
+        document.getElementById("otpModal").classList.add("hidden");
+        clearInterval(otpTimerInterval);
+      }
+
+      async function sendOTP() {
+        const email = document.getElementById(activeFormType + "Email").value.trim();
+        const firstName = document.getElementById(activeFormType + "FirstName").value.trim();
+        const btn = document.getElementById("sendOtpBtn");
+        const errorDiv = document.getElementById("otpStep1Error");
+
+        btn.disabled = true;
+        btn.textContent = "Sending...";
+        errorDiv.classList.add("hidden");
+
+        try {
+          const res = await fetch("/send-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, firstName })
+          });
+          const data = await res.json();
+
+          if (!data.success) {
+            errorDiv.textContent = data.message;
+            errorDiv.classList.remove("hidden");
+            btn.disabled = false;
+            btn.textContent = "Send OTP";
+            return;
+          }
+
+          document.getElementById("otpStep1").classList.add("hidden");
+          document.getElementById("otpStep2").classList.remove("hidden");
+          startOTPTimer(600);
+          document.querySelectorAll(".otp-box")[0].focus();
+
+        } catch (err) {
+          errorDiv.textContent = "Network error. Please try again.";
+          errorDiv.classList.remove("hidden");
+          btn.disabled = false;
+          btn.textContent = "Send OTP";
+        }
+      }
+
+      async function verifyOTP() {
+        const email = document.getElementById(activeFormType + "Email").value.trim();
+        const otp = Array.from(document.querySelectorAll(".otp-box")).map(b => b.value).join("");
+        const btn = document.getElementById("verifyOtpBtn");
+        const errorDiv = document.getElementById("otpStep2Error");
+
+        if (otp.length < 6) {
+          errorDiv.textContent = "Please enter the complete 6-digit OTP.";
+          errorDiv.classList.remove("hidden");
+          return;
+        }
+
+        btn.disabled = true;
+        btn.textContent = "Verifying...";
+        errorDiv.classList.add("hidden");
+
+        try {
+          const res = await fetch("/verify-otp", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, otp })
+          });
+          const data = await res.json();
+
+          if (!data.success) {
+            errorDiv.textContent = data.message;
+            errorDiv.classList.remove("hidden");
+            btn.disabled = false;
+            btn.textContent = "Verify & Create Account";
+            document.querySelectorAll(".otp-box").forEach(b => {
+              b.classList.add("border-red-400");
+              setTimeout(() => b.classList.remove("border-red-400"), 1500);
+            });
+            return;
+          }
+
+          clearInterval(otpTimerInterval);
+          closeOTPModal();
+          document.getElementById(activeFormType + "SignupForm").submit();
+
+        } catch (err) {
+          errorDiv.textContent = "Network error. Please try again.";
+          errorDiv.classList.remove("hidden");
+          btn.disabled = false;
+          btn.textContent = "Verify & Create Account";
+        }
+      }
+
+      async function resendOTP() {
+        clearOTPBoxes();
+        document.getElementById("otpStep2Error").classList.add("hidden");
+        document.getElementById("resendBtn").disabled = true;
+        clearInterval(otpTimerInterval);
+        await sendOTP();
+      }
+
+      function clearOTPBoxes() {
+        document.querySelectorAll(".otp-box").forEach(b => b.value = "");
+      }
+
+      function startOTPTimer(seconds) {
+        let remaining = seconds;
+        const timerEl = document.getElementById("otpTimer");
+        const resendBtn = document.getElementById("resendBtn");
+
+        resendBtn.disabled = true;
+        timerEl.classList.remove("text-red-500");
+        timerEl.classList.add("text-primary-500");
+
+        otpTimerInterval = setInterval(() => {
+          remaining--;
+          const m = Math.floor(remaining / 60).toString().padStart(2, "0");
+          const s = (remaining % 60).toString().padStart(2, "0");
+          timerEl.textContent = `${m}:${s}`;
+
+          if (remaining <= 0) {
+            clearInterval(otpTimerInterval);
+            timerEl.textContent = "Expired";
+            timerEl.classList.remove("text-primary-500");
+            timerEl.classList.add("text-red-500");
+            resendBtn.disabled = false;
+          }
+        }, 1000);
+      }
+
+      // ─── OTP box: auto-advance & backspace ───────────────────────────────────
+      document.addEventListener("DOMContentLoaded", () => {
+        const boxes = document.querySelectorAll(".otp-box");
+
+        boxes.forEach((box, i) => {
+          box.addEventListener("input", () => {
+            box.value = box.value.replace(/\D/g, "");
+            if (box.value && i < boxes.length - 1) boxes[i + 1].focus();
+          });
+
+          box.addEventListener("keydown", (e) => {
+            if (e.key === "Backspace" && !box.value && i > 0) boxes[i - 1].focus();
+            if (e.key === "Enter") verifyOTP();
+          });
+
+          box.addEventListener("paste", (e) => {
+            e.preventDefault();
+            const pasted = e.clipboardData.getData("text").replace(/\D/g, "").slice(0, 6);
+            pasted.split("").forEach((char, idx) => { if (boxes[idx]) boxes[idx].value = char; });
+            boxes[Math.min(pasted.length, 5)].focus();
+          });
+        });
+      });
+
+    </script>
+  </body>
+</html>
