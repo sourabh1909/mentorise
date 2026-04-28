@@ -1,24 +1,21 @@
 const nodemailer = require("nodemailer");
 
-// ─── Gmail Transporter ────────────────────────────────────────────────────────
-// Uses Gmail App Password (NOT your regular Gmail password).
-// Steps to get an App Password:
-//   1. Enable 2-Step Verification on your Google account
-//   2. Go to: https://myaccount.google.com/apppasswords
-//   3. Create a new app password → copy the 16-char code
-//   4. Set these in Render environment variables:
-//      GMAIL_USER = mentorise.platform@gmail.com
-//      GMAIL_PASS = your-16-char-app-password
+// ─── Gmail Transporter (IPv4 forced — required for Render free tier) ─────────
+// Render's free tier blocks outbound IPv6. Using explicit host + family:4
+// forces Node.js to connect over IPv4 only, which Render allows.
 // ─────────────────────────────────────────────────────────────────────────────
 const transporter = nodemailer.createTransport({
-  service: "gmail",
+  host: "smtp.gmail.com",   // explicit host instead of service:"gmail"
+  port: 465,                // SSL port
+  secure: true,             // use SSL
+  family: 4,                // ← forces IPv4, fixes ENETUNREACH on Render
   auth: {
     user: process.env.GMAIL_USER,
     pass: process.env.GMAIL_PASS,
   },
 });
 
-// Verify transporter connection on startup (logs success/failure in Render logs)
+// Verify transporter on startup — check Render logs for result
 transporter.verify((error, success) => {
   if (error) {
     console.error("Gmail transporter error:", error.message);
