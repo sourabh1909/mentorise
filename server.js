@@ -231,7 +231,7 @@ app.post("/forgot-password", async (req, res) => {
     const expiresAt = Date.now() + 15 * 60 * 1000; // 15 minutes
     resetTokenStore.set(token, { email, expiresAt });
 
-    const resetLink = `${process.env.APP_URL || "http://localhost:3000"}/reset-password?token=${token}`;
+    const resetLink = `${process.env.APP_URL || "https://mentorise-1.onrender.com"}/reset-password?token=${token}`;
     await sendPasswordResetEmail({ email, firstName: user.firstName, resetLink });
 
     res.json({ success: true, message: "Reset link sent." });

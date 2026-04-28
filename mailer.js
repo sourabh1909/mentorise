@@ -24,7 +24,7 @@ const sendMail = async ({ to, subject, html }) => {
 
 // ─── Send email to mentee when mentor ACCEPTS session ───────────────────────
 const sendSessionAcceptedToMentee = async ({ menteeEmail, menteeName, mentorName, date, time, sessionId, menteeId }) => {
-  const videoCallLink = sessionId ? `${process.env.APP_URL || 'http://localhost:3000'}/video-call/${sessionId}?userId=${menteeId || ''}` : null;
+  const videoCallLink = sessionId ? `${process.env.APP_URL || 'https://mentorise-1.onrender.com'}/video-call/${sessionId}?userId=${menteeId || ''}` : null;
   await sendMail({
     to: menteeEmail,
     subject: `Your Session with ${mentorName} is Confirmed! ✅`,
@@ -125,8 +125,8 @@ const sendPasswordResetEmail = async ({ email, firstName, resetLink }) => {
 // ─── Send session reminder email (30 min before) ─────────────────────────────
 const sendSessionReminderEmail = async ({ email, firstName, otherName, date, time, sessionId, userId, isGroup, groupTitle }) => {
   const joinLink = isGroup
-    ? `${process.env.APP_URL || 'http://localhost:3000'}/group-video-call/${sessionId}?userId=${userId}`
-    : `${process.env.APP_URL || 'http://localhost:3000'}/video-call/${sessionId}?userId=${userId}`;
+    ? `${process.env.APP_URL || 'https://mentorise-1.onrender.com'}/group-video-call/${sessionId}?userId=${userId}`
+    : `${process.env.APP_URL || 'https://mentorise-1.onrender.com'}/video-call/${sessionId}?userId=${userId}`;
   const sessionLabel = isGroup ? `Group Session: ${groupTitle}` : `1-on-1 Session with ${otherName}`;
   await sendMail({
     to: email,
