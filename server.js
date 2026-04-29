@@ -30,6 +30,11 @@ server.listen(port, () => {
   console.log("Server started on port " + port);
 });
 
+// ─── Health Check (keeps Render free tier alive via UptimeRobot) ──────────────
+app.get("/health", (req, res) => {
+  res.status(200).json({ status: "ok", uptime: process.uptime() });
+});
+
 // ─── Socket.IO ────────────────────────────────────────────────────────────────
 io.on("connection", (socket) => {
   console.log("User connected:", socket.id);
@@ -124,7 +129,6 @@ app.get("/login", (req, res) => res.sendFile(path.join(__dirname, "public", "Log
 app.get("/signup", (req, res) => res.sendFile(path.join(__dirname, "public", "signup.html")));
 
 // ─── Auth Routes ──────────────────────────────────────────────────────────────
-// Signup — no OTP check, direct registration
 app.post("/signup", async (req, res) => {
   const result = await signupUser(req.body);
 
@@ -144,7 +148,6 @@ app.post("/signup", async (req, res) => {
   return res.redirect(userType === "mentor" ? `/mentor-home/${userId}` : `/mentee-home/${userId}`);
 });
 
-// Login — no OTP check, direct login
 app.post("/login", async (req, res) => {
   const { email, password } = req.body;
   const result = await loginUser(email, password);
@@ -163,8 +166,6 @@ app.post("/logout", (req, res) => {
 });
 
 // ─── Forgot / Reset Password ──────────────────────────────────────────────────
-// NOTE: Reset password emails are also removed since SMTP is blocked on Render free tier.
-// If you need password reset, upgrade Render plan or use a paid email API later.
 app.post("/forgot-password", async (req, res) => {
   res.status(503).json({
     success: false,
