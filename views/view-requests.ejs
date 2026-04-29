@@ -194,25 +194,30 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex flex-col sm:flex-row gap-3 lg:flex-col">
-                  <button onclick="acceptRequest('${session.id}')" class="bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center">
-                    <i class="fas fa-check mr-2"></i>
-                    Accept
-                  </button>
-                  <button onclick="rejectRequest('${session.id}')" class="bg-red-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center">
-                    <i class="fas fa-times mr-2"></i>
-                    Reject
-                  </button>
-                </div>
-              </div>
-
-              <!-- Confirmation message shown after accepting -->
-              <div id="acceptedMsg-${session.id}" class="hidden mt-6 pt-6 border-t border-neutral-200">
-                <div class="flex items-center space-x-3 bg-green-50 border border-green-200 rounded-lg px-4 py-3">
-                  <i class="fas fa-check-circle text-green-500 text-xl"></i>
-                  <div>
-                    <p class="text-green-800 font-medium">Session Accepted!</p>
-                    <p class="text-green-700 text-sm">A video call room has been created. Both you and ${session.menteeName} can join via the Bookings page.</p>
+                <div class="flex flex-col gap-3 lg:min-w-[160px]">
+                  <!-- Default buttons -->
+                  <div id="btns-${session.id}" class="flex flex-col sm:flex-row lg:flex-col gap-3">
+                    <button onclick="promptConfirm('${session.id}', 'accepted', '${session.menteeName}')"
+                      class="bg-green-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-600 transition-colors flex items-center justify-center">
+                      <i class="fas fa-check mr-2"></i>Accept
+                    </button>
+                    <button onclick="promptConfirm('${session.id}', 'rejected', '${session.menteeName}')"
+                      class="bg-red-500 text-white px-6 py-3 rounded-lg font-medium hover:bg-red-600 transition-colors flex items-center justify-center">
+                      <i class="fas fa-times mr-2"></i>Reject
+                    </button>
+                  </div>
+                  <!-- Inline confirm panel (hidden by default) -->
+                  <div id="confirm-${session.id}" class="hidden flex-col gap-2">
+                    <p id="confirm-text-${session.id}" class="text-sm font-semibold text-neutral-700 text-center"></p>
+                    <button id="confirm-yes-${session.id}" onclick=""
+                      class="w-full py-2 rounded-lg text-sm font-medium text-white transition-colors flex items-center justify-center gap-2">
+                      <i id="spinner-${session.id}" class="fas fa-spinner fa-spin hidden"></i>
+                      <span id="confirm-label-${session.id}">Yes, confirm</span>
+                    </button>
+                    <button onclick="cancelConfirm('${session.id}')"
+                      class="w-full border border-neutral-300 text-neutral-600 py-2 rounded-lg text-sm hover:bg-neutral-100 transition-colors">
+                      Cancel
+                    </button>
                   </div>
                 </div>
               </div>
@@ -221,75 +226,110 @@
         }).join('');
       }
 
-      // Accept request directly - no meet link needed
-      async function acceptRequest(sessionId) {
-        if (!confirm('Accept this session request? A video call room will be created automatically.')) return;
+      // ── Toast notification ────────────────────────────────────────────────
+      function showToast(message, type = 'success') {
+        const existing = document.getElementById('toast');
+        if (existing) existing.remove();
 
-        try {
-          const response = await fetch('/update-session', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ sessionId, status: 'accepted' })
-          });
+        const colors = type === 'success'
+          ? 'bg-green-600 text-white'
+          : 'bg-red-600 text-white';
+        const icon = type === 'success' ? 'fa-check-circle' : 'fa-times-circle';
 
-          const result = await response.json();
+        const toast = document.createElement('div');
+        toast.id = 'toast';
+        toast.className = `fixed top-6 right-6 z-50 flex items-center gap-3 px-5 py-4 rounded-xl shadow-2xl ${colors} transition-all duration-300 opacity-0 translate-y-2`;
+        toast.innerHTML = `<i class="fas ${icon} text-xl"></i><span class="font-medium text-sm">${message}</span>`;
+        document.body.appendChild(toast);
 
-          if (result.success) {
-            // Show confirmation message in card
-            const msg = document.getElementById(`acceptedMsg-${sessionId}`);
-            if (msg) msg.classList.remove('hidden');
+        // Animate in
+        requestAnimationFrame(() => {
+          toast.style.opacity = '1';
+          toast.style.transform = 'translateY(0)';
+        });
 
-            // Hide action buttons
-            const btns = document.querySelector(`#request-${sessionId} .flex.flex-col.sm\\:flex-row.gap-3`);
-            if (btns) btns.innerHTML = `<span class="bg-green-100 text-green-800 px-4 py-2 rounded-lg text-sm font-medium"><i class="fas fa-check-circle mr-1"></i> Accepted</span>`;
-
-            setTimeout(() => {
-              const requestCard = document.getElementById(`request-${sessionId}`);
-              requestCard.style.transition = 'all 0.3s ease';
-              requestCard.style.opacity = '0';
-              setTimeout(() => { requestCard.remove(); checkEmptyState(); }, 300);
-            }, 2000);
-          } else {
-            alert('❌ Failed to accept request: ' + result.message);
-          }
-        } catch (error) {
-          console.error('Error:', error);
-          alert('❌ An error occurred');
-        }
+        // Animate out after 3.5s
+        setTimeout(() => {
+          toast.style.opacity = '0';
+          toast.style.transform = 'translateY(-8px)';
+          setTimeout(() => toast.remove(), 300);
+        }, 3500);
       }
 
-      // Reject request
-      async function rejectRequest(sessionId) {
-        if (!confirm('Are you sure you want to reject this request?')) return;
+      // ── Inline confirm prompt ─────────────────────────────────────────────
+      let pendingAction = {};
+
+      function promptConfirm(sessionId, status, menteeName) {
+        // Hide buttons, show confirm panel
+        document.getElementById(`btns-${sessionId}`).classList.add('hidden');
+        const panel = document.getElementById(`confirm-${sessionId}`);
+        panel.classList.remove('hidden');
+        panel.classList.add('flex');
+
+        const isAccept = status === 'accepted';
+        const textEl = document.getElementById(`confirm-text-${sessionId}`);
+        const yesBtn = document.getElementById(`confirm-yes-${sessionId}`);
+        const labelEl = document.getElementById(`confirm-label-${sessionId}`);
+
+        textEl.textContent = isAccept
+          ? `Accept session with ${menteeName}?`
+          : `Reject session with ${menteeName}?`;
+
+        yesBtn.className = `w-full py-2 rounded-lg text-sm font-medium text-white transition-colors flex items-center justify-center gap-2 ${isAccept ? 'bg-green-500 hover:bg-green-600' : 'bg-red-500 hover:bg-red-600'}`;
+        labelEl.textContent = isAccept ? 'Yes, Accept' : 'Yes, Reject';
+
+        yesBtn.onclick = () => executeAction(sessionId, status, menteeName);
+      }
+
+      function cancelConfirm(sessionId) {
+        document.getElementById(`btns-${sessionId}`).classList.remove('hidden');
+        const panel = document.getElementById(`confirm-${sessionId}`);
+        panel.classList.add('hidden');
+        panel.classList.remove('flex');
+      }
+
+      async function executeAction(sessionId, status, menteeName) {
+        const yesBtn  = document.getElementById(`confirm-yes-${sessionId}`);
+        const spinner = document.getElementById(`spinner-${sessionId}`);
+        const label   = document.getElementById(`confirm-label-${sessionId}`);
+
+        // Show loading
+        yesBtn.disabled = true;
+        spinner.classList.remove('hidden');
+        label.textContent = 'Processing…';
 
         try {
           const response = await fetch('/update-session', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              sessionId: sessionId,
-              status: 'rejected'
-            })
+            body: JSON.stringify({ sessionId, status })
           });
 
           const result = await response.json();
 
           if (result.success) {
-            const requestCard = document.getElementById(`request-${sessionId}`);
-            requestCard.style.transition = 'all 0.3s ease';
-            requestCard.style.transform = 'translateX(-100%)';
-            requestCard.style.opacity = '0';
-            
-            setTimeout(() => {
-              requestCard.remove();
-              checkEmptyState();
-            }, 300);
+            const isAccept = status === 'accepted';
+            showToast(
+              isAccept
+                ? `✅ Session with ${menteeName} accepted! They'll be notified by email.`
+                : `Session with ${menteeName} has been rejected.`,
+              isAccept ? 'success' : 'error'
+            );
+
+            // Fade out card
+            const card = document.getElementById(`request-${sessionId}`);
+            card.style.transition = 'all 0.4s ease';
+            card.style.opacity = '0';
+            card.style.transform = 'scale(0.97)';
+            setTimeout(() => { card.remove(); checkEmptyState(); }, 400);
           } else {
-            alert('❌ Failed to reject request');
+            showToast('Failed: ' + (result.message || 'Unknown error'), 'error');
+            cancelConfirm(sessionId);
           }
         } catch (error) {
           console.error('Error:', error);
-          alert('❌ An error occurred');
+          showToast('A network error occurred. Please try again.', 'error');
+          cancelConfirm(sessionId);
         }
       }
 
