@@ -150,13 +150,36 @@
 
     async function init() {
       try {
-        localStream = await navigator.mediaDevices.getUserMedia({ video:true, audio:true });
-        document.getElementById('localVideo').srcObject = localStream;
-        socket.emit('join-video-room', { room:ROOM, userId:MY_ID, userName:MY_NAME });
-        makePipDraggable();
+        // Try full video+audio first
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
       } catch(e) {
-        alert('Cannot access camera/microphone. Please allow permissions and reload.');
+        console.warn('Full media access failed, trying audio-only:', e.name);
+        try {
+          // Fallback: audio only (e.g. camera blocked or unavailable on low-end device)
+          localStream = await navigator.mediaDevices.getUserMedia({ video: false, audio: true });
+          isCamOff = true;
+          document.getElementById('camIcon').className = 'fas fa-video-slash text-white';
+          document.getElementById('camBtn').style.background = '#e63946';
+          showBanner('Camera unavailable — continuing with audio only.', 'yellow');
+        } catch(e2) {
+          console.error('Microphone also failed:', e2);
+          showBanner('Cannot access microphone. Please allow permissions and reload.', 'red');
+          return;
+        }
       }
+      document.getElementById('localVideo').srcObject = localStream;
+      socket.emit('join-video-room', { room:ROOM, userId:MY_ID, userName:MY_NAME });
+      makePipDraggable();
+    }
+
+    // Small top banner for non-blocking warnings
+    function showBanner(msg, color) {
+      const colors = { yellow: 'bg-yellow-600', red: 'bg-red-600' };
+      const b = document.createElement('div');
+      b.className = `fixed top-16 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-lg text-white text-xs font-medium shadow-lg ${colors[color] || 'bg-gray-700'}`;
+      b.textContent = msg;
+      document.body.appendChild(b);
+      setTimeout(() => b.remove(), 6000);
     }
 
     // ── Draggable PiP ──
@@ -224,21 +247,49 @@
       }
     });
 
+    // ICE servers: STUN + free public TURN fallbacks for low-quality / symmetric NAT networks
+    const ICE_SERVERS = [
+      { urls: 'stun:stun.l.google.com:19302' },
+      { urls: 'stun:stun1.l.google.com:19302' },
+      { urls: 'stun:stun.cloudflare.com:3478' },
+      // Free TURN servers via Open Relay (metered.ca) — replace with your own for production
+      {
+        urls: 'turn:openrelay.metered.ca:80',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      },
+      {
+        urls: 'turn:openrelay.metered.ca:443?transport=tcp',
+        username: 'openrelayproject',
+        credential: 'openrelayproject'
+      }
+    ];
+
+    let reconnectAttempts = 0;
+    const MAX_RECONNECT = 3;
+
     async function createPC() {
       if (pc) return;
       pc = new RTCPeerConnection({
-        iceServers:[
-          {urls:'stun:stun.l.google.com:19302'},
-          {urls:'stun:stun1.l.google.com:19302'}
-        ]
+        iceServers: ICE_SERVERS,
+        iceCandidatePoolSize: 10,  // pre-gather candidates for faster connection
       });
       localStream.getTracks().forEach(t => pc.addTrack(t, localStream));
 
       pc.ontrack = e => {
-        document.getElementById('remoteVideo').srcObject = e.streams[0];
+        const remoteVideo = document.getElementById('remoteVideo');
+        remoteVideo.srcObject = e.streams[0];
+        // Ensure video plays even if browser paused it
+        remoteVideo.play().catch(() => {});
         document.getElementById('waitingOverlay').style.display = 'none';
         setStatus('green','Connected');
         startTimer();
+        reconnectAttempts = 0;
       };
 
       pc.onicecandidate = e => {
@@ -246,10 +297,54 @@
           socket.emit('video-signal',{ room:ROOM, to:OTHER_ID, from:MY_ID, type:'ice', candidate:e.candidate });
       };
 
-      pc.onconnectionstatechange = () => {
-        if (pc.connectionState==='connected') setStatus('green','Connected');
-        if (pc.connectionState==='disconnected'||pc.connectionState==='failed') setStatus('red','Lost');
+      pc.onicegatheringstatechange = () => {
+        if (pc.iceGatheringState === 'complete') {
+          console.log('ICE gathering complete');
+        }
       };
+
+      pc.onconnectionstatechange = () => {
+        console.log('Connection state:', pc.connectionState);
+        if (pc.connectionState === 'connected') {
+          setStatus('green','Connected');
+          reconnectAttempts = 0;
+        }
+        if (pc.connectionState === 'disconnected') {
+          setStatus('yellow','Reconnecting…');
+          // Browser will auto-attempt ICE restart; wait before acting
+        }
+        if (pc.connectionState === 'failed') {
+          if (reconnectAttempts < MAX_RECONNECT) {
+            reconnectAttempts++;
+            setStatus('yellow', `Reconnecting (${reconnectAttempts}/${MAX_RECONNECT})…`);
+            attemptReconnect();
+          } else {
+            setStatus('red','Connection lost');
+          }
+        }
+      };
+
+      pc.oniceconnectionstatechange = () => {
+        if (pc.iceConnectionState === 'failed') {
+          // Trigger ICE restart automatically
+          if (pc.restartIce) {
+            pc.restartIce();
+          }
+        }
+      };
+    }
+
+    // Attempt ICE restart (renegotiation) without dropping the call
+    async function attemptReconnect() {
+      try {
+        if (!pc) return;
+        const offer = await pc.createOffer({ iceRestart: true });
+        await pc.setLocalDescription(offer);
+        socket.emit('video-signal', { room: ROOM, to: OTHER_ID, from: MY_ID, type: 'offer', sdp: offer });
+      } catch(e) {
+        console.error('Reconnect failed:', e);
+        setStatus('red', 'Connection lost');
+      }
     }
 
     function toggleMute() {

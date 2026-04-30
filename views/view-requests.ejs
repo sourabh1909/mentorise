@@ -118,8 +118,24 @@
       </div>
     </main>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script>
       const mentorId = '<%= mentorId %>';
+
+      // ── Real-time socket: listen for session status changes (e.g. if triggered from another tab)
+      const socket = io();
+      // Mentor joins their own notification room
+      socket.emit('join-chat', { roomId: `mentor-${mentorId}`, userName: 'mentor' });
+      // If another browser tab accepted/rejected a request, remove the card here too
+      socket.on(`session-update-${mentorId}`, ({ sessionId }) => {
+        const card = document.getElementById(`request-${sessionId}`);
+        if (card) {
+          card.style.transition = 'all 0.4s ease';
+          card.style.opacity = '0';
+          card.style.transform = 'scale(0.97)';
+          setTimeout(() => { card.remove(); checkEmptyState(); }, 400);
+        }
+      });
 
       // Load requests on page load
       document.addEventListener('DOMContentLoaded', () => {

@@ -39,6 +39,7 @@
       };
     </script>
 
+    <script src="/socket.io/socket.io.js"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;700&family=Roboto:wght@400;500&display=swap" rel="stylesheet" />
   </head>
@@ -175,6 +176,35 @@
       let selectedRating = 0;
       let currentReviewSession = null;
 
+      // ── Real-time session status updates (Socket.IO) ─────────────────────────
+      const socket = io();
+
+      socket.on(`session-update-${menteeId}`, ({ sessionId, status, mentorName }) => {
+        const card = document.getElementById(`session-${sessionId}`);
+        if (!card) {
+          loadBookings();
+          return;
+        }
+
+        const statusBadge = card.querySelector('.status-badge');
+        if (statusBadge) {
+          if (status === 'accepted') {
+            statusBadge.className = 'status-badge bg-green-100 text-green-700 px-3 py-1 rounded-full text-xs font-medium';
+            statusBadge.textContent = 'Accepted';
+          } else if (status === 'rejected') {
+            statusBadge.className = 'status-badge bg-red-100 text-red-700 px-3 py-1 rounded-full text-xs font-medium';
+            statusBadge.textContent = 'Rejected';
+          }
+        }
+
+        showToast(
+          status === 'accepted'
+            ? `\u2705 ${mentorName} accepted your session request!`
+            : `${mentorName} has declined your session request.`,
+          status === 'accepted' ? 'success' : 'error'
+        );
+      });
+
       // ── Tab switching ────────────────────────────────────────────────────────
       function switchTab(tab) {
         ['1on1','group'].forEach(t => {
@@ -247,7 +277,7 @@
           const alreadyReviewed = reviewedSessions.has(session.id);
 
           return `
-            <div class="bg-white rounded-2xl shadow-lg p-6 border border-neutral-100 hover:shadow-xl transition-all duration-300 ${cardOpacity}">
+            <div id="session-${session.id}" class="bg-white rounded-2xl shadow-lg p-6 border border-neutral-100 hover:shadow-xl transition-all duration-300 ${cardOpacity}">
               <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
                 <div class="flex items-center space-x-4">
                   <div class="w-16 h-16 bg-gradient-to-br ${color} rounded-full flex items-center justify-center shadow-lg flex-shrink-0">
@@ -263,7 +293,7 @@
                 <div class="flex-1 lg:ml-8">
                   ${session.message ? `<div class="mb-3"><h4 class="font-semibold text-neutral-800 mb-1 text-sm">Topic:</h4><p class="text-neutral-600 text-sm">${session.message}</p></div>` : ''}
                   <div class="flex items-center gap-2 flex-wrap">
-                    <span class="px-3 py-1 rounded-full text-sm font-medium ${config.color}">
+                    <span class="status-badge px-3 py-1 rounded-full text-sm font-medium ${config.color}">
                       <i class="fas ${config.icon} mr-1"></i>${config.text}
                     </span>
                     ${session.status === 'accepted' ? `<span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium"><i class="fas fa-video mr-1"></i>Video Call</span>` : ''}

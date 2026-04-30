@@ -303,6 +303,18 @@ app.post("/update-session", async (req, res) => {
       }
     }
 
+    // Notify mentee in real-time so their booking page updates without a refresh
+    io.emit(`session-update-${session.menteeId.toString()}`, {
+      sessionId,
+      status,
+      mentorName: session.mentorName,
+    });
+    // Also notify mentor's other tabs/windows
+    io.emit(`session-update-${session.mentorId.toString()}`, {
+      sessionId,
+      status,
+    });
+
     res.json({ success: true, message: `Session ${status} successfully!` });
   } catch (error) {
     console.error("Error updating session:", error);
