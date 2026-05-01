@@ -7,7 +7,7 @@ const http = require("http");
 const socketIO = require("socket.io");
 const cookieParser = require("cookie-parser");
 
-const { connectDB, Mentor, Mentee, Session, Chat, Message, Review, GroupSession } = require("./db");
+const { connectDB, Mentor, Mentee, Session, Chat, Message, Review, GroupSession, ActiveChat } = require("./db");
 const { signupUser, loginUser } = require("./auth");
 const { sendSessionAcceptedToMentee, sendSessionRejectedToMentee } = require("./mailer");
 
@@ -70,6 +70,16 @@ io.on("connection", (socket) => {
         }
       );
 
+      // Keep ActiveChat in sync with latest message & unread counts
+      await ActiveChat.findOneAndUpdate(
+        { chatId: roomId },
+        {
+          lastMessage: { content: message, senderId: sender, senderName, sentAt: saved.createdAt },
+          lastActivity: new Date(),
+          $inc: unreadIncrement,
+        }
+      );
+
       io.to(roomId).emit("receive-message", {
         _id: saved._id.toString(),
         message, sender, senderName,
@@ -96,16 +106,38 @@ io.on("connection", (socket) => {
 
   socket.on("join-video-room", ({ room, userId, userName }) => {
     socket.join(room);
-    socket.data.videoRoom = room;
-    socket.to(room).emit("video-user-joined", { userId, userName });
+    socket.data.videoRoom  = room;
+    socket.data.videoUserId = userId;
+    // Tell every OTHER socket in the room that a new peer arrived
+    socket.to(room).emit("video-user-joined", { userId, userName, socketId: socket.id });
+    // Tell the new joiner which peers are already in the room
+    const roomSockets = io.sockets.adapter.rooms.get(room);
+    const existingPeers = [];
+    if (roomSockets) {
+      for (const sid of roomSockets) {
+        if (sid !== socket.id) {
+          const peer = io.sockets.sockets.get(sid);
+          if (peer) existingPeers.push({ socketId: sid, userId: peer.data.videoUserId, userName: peer.data.videoUserName });
+        }
+      }
+    }
+    socket.emit("video-room-peers", { peers: existingPeers });
+    socket.data.videoUserName = userName;
   });
 
-  socket.on("video-signal", ({ room, to, from, type, sdp, candidate }) => {
-    socket.to(room).emit("video-signal", { from, type, sdp, candidate });
+  // Route signals to a specific socket (targetSocketId) for full mesh
+  socket.on("video-signal", ({ room, to, toSocketId, from, fromSocketId, type, sdp, candidate }) => {
+    if (toSocketId) {
+      // Group call: signal directly to the target socket
+      io.to(toSocketId).emit("video-signal", { from, fromSocketId: socket.id, type, sdp, candidate });
+    } else {
+      // 1-on-1 fallback: broadcast to room
+      socket.to(room).emit("video-signal", { from, fromSocketId: socket.id, type, sdp, candidate });
+    }
   });
 
-  socket.on("video-leave", ({ room, userId }) => {
-    socket.to(room).emit("video-user-left", { userId });
+  socket.on("video-leave", ({ room, userId, socketId: leavingSocketId }) => {
+    socket.to(room).emit("video-user-left", { userId, socketId: leavingSocketId || socket.id });
     socket.leave(room);
     socket.data.videoRoom = null;
   });
@@ -116,7 +148,10 @@ io.on("connection", (socket) => {
 
   socket.on("disconnect", () => {
     if (socket.data.videoRoom) {
-      socket.to(socket.data.videoRoom).emit("video-user-left", { userId: socket.id });
+      socket.to(socket.data.videoRoom).emit("video-user-left", {
+        userId: socket.data.videoUserId,
+        socketId: socket.id,
+      });
     }
     console.log("User disconnected:", socket.id);
   });
@@ -376,6 +411,22 @@ app.get("/chat/:currentUserId/:otherUserId", async (req, res) => {
       { upsert: true, new: true }
     );
 
+    // ── Keep ActiveChat in sync ──────────────────────────────────────────────
+    await ActiveChat.findOneAndUpdate(
+      { chatId },
+      {
+        chatId,
+        mentorId, menteeId,
+        mentorName: `${mentorData.firstName} ${mentorData.lastName}`,
+        menteeName: `${menteeData.firstName} ${menteeData.lastName}`,
+        mentorImg:  mentorData.img  || "",
+        menteeImg:  menteeData.img  || "",
+        isActive:   true,
+        lastActivity: new Date(),
+      },
+      { upsert: true, new: true }
+    );
+
     res.render("chat", {
       currentUserId,
       currentUserName: `${currentUserData.firstName} ${currentUserData.lastName}`,
@@ -436,6 +487,40 @@ app.get("/mentor-chats/:mentorId", async (req, res) => {
   } catch (error) { res.status(500).send("Server error"); }
 });
 
+// ─── ActiveChat API Routes ─────────────────────────────────────────────────
+// GET active chats for a mentor (sorted by most recent activity)
+app.get("/active-chats/mentor/:mentorId", async (req, res) => {
+  try {
+    const chats = await ActiveChat.find({ mentorId: req.params.mentorId, isActive: true })
+      .sort({ lastActivity: -1 }).lean();
+    res.json({ success: true, chats: chats.map(c => ({ ...c, id: c._id.toString() })) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to fetch active chats." });
+  }
+});
+
+// GET active chats for a mentee (sorted by most recent activity)
+app.get("/active-chats/mentee/:menteeId", async (req, res) => {
+  try {
+    const chats = await ActiveChat.find({ menteeId: req.params.menteeId, isActive: true })
+      .sort({ lastActivity: -1 }).lean();
+    res.json({ success: true, chats: chats.map(c => ({ ...c, id: c._id.toString() })) });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to fetch active chats." });
+  }
+});
+
+// DELETE (archive) an active chat for either side
+app.post("/active-chats/archive", async (req, res) => {
+  try {
+    const { chatId } = req.body;
+    await ActiveChat.findOneAndUpdate({ chatId }, { isActive: false });
+    res.json({ success: true });
+  } catch (err) {
+    res.status(500).json({ success: false, message: "Failed to archive chat." });
+  }
+});
+
 // ─── Video Call ───────────────────────────────────────────────────────────────
 app.get("/video-call/:sessionId", async (req, res) => {
   try {
@@ -454,6 +539,8 @@ app.get("/video-call/:sessionId", async (req, res) => {
       otherUserName: isMentor ? session.menteeName : session.mentorName,
       role: isMentor ? "mentor" : "mentee",
       redirectUrl: isMentor ? `/mentor-home/${session.mentorId}` : `/mentee-home/${session.menteeId}`,
+      isGroupCall: false,
+      groupParticipants: "[]",
     });
   } catch (error) {
     res.status(500).send("Server error");
@@ -608,12 +695,26 @@ app.get("/group-video-call/:groupSessionId", async (req, res) => {
     if (!isMentor && !participant) return res.status(403).send("You are not part of this session.");
     const currentUser = isMentor ? await Mentor.findById(userId).lean() : await Mentee.findById(userId).lean();
     if (!currentUser) return res.status(404).send("User not found.");
+
+    // Build full participant list so the client can create one RTCPeerConnection per peer
+    const acceptedMentees = gs.participants.filter(p => p.status === "accepted");
+    const allParticipants = [
+      { userId: gs.mentorId.toString(), userName: gs.mentorName, role: "mentor" },
+      ...acceptedMentees.map(p => ({
+        userId: p.menteeId.toString(), userName: p.menteeName, role: "mentee",
+      })),
+    ];
+
     res.render("video-call", {
-      sessionId: groupSessionId, currentUserId: userId,
-      currentUserName: `${currentUser.firstName} ${currentUser.lastName}`,
-      otherUserId: gs.mentorId.toString(), otherUserName: gs.mentorName,
-      role: isMentor ? "mentor" : "mentee",
-      redirectUrl: isMentor ? `/mentor-home/${userId}` : `/mentee-home/${userId}`,
+      sessionId:         groupSessionId,
+      currentUserId:     userId,
+      currentUserName:   `${currentUser.firstName} ${currentUser.lastName}`,
+      otherUserId:       "",          // unused in group mode
+      otherUserName:     gs.title,    // session title shown in header
+      role:              isMentor ? "mentor" : "mentee",
+      redirectUrl:       isMentor ? `/mentor-home/${userId}` : `/mentee-home/${userId}`,
+      isGroupCall:       true,
+      groupParticipants: JSON.stringify(allParticipants),
     });
   } catch (err) {
     res.status(500).send("Server error");

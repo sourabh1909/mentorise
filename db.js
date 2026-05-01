@@ -132,6 +132,36 @@ const groupSessionSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ─── ActiveChat Schema ────────────────────────────────────────────────────────
+// Tracks which mentor↔mentee pairs have an active (open) chat thread.
+// Created automatically when either side opens a chat for the first time.
+// Useful for showing a mentor's/mentee's active chat list in dashboards.
+const activeChatSchema = new mongoose.Schema(
+  {
+    chatId:        { type: String, required: true, unique: true }, // "{mentorId}_{menteeId}"
+    mentorId:      { type: mongoose.Schema.Types.ObjectId, ref: "Mentor", required: true },
+    menteeId:      { type: mongoose.Schema.Types.ObjectId, ref: "Mentee", required: true },
+    mentorName:    { type: String, required: true },
+    menteeName:    { type: String, required: true },
+    mentorImg:     { type: String, default: "" },
+    menteeImg:     { type: String, default: "" },
+    isActive:      { type: Boolean, default: true },  // set false if either user archives/deletes
+    lastMessage: {
+      content:    { type: String, default: "" },
+      senderId:   { type: String, default: "" },
+      senderName: { type: String, default: "" },
+      sentAt:     { type: Date,   default: null },
+    },
+    unreadCountMentor: { type: Number, default: 0 },
+    unreadCountMentee: { type: Number, default: 0 },
+    lastActivity:      { type: Date, default: Date.now },
+  },
+  { timestamps: true }
+);
+// Fast lookups by either participant
+activeChatSchema.index({ mentorId: 1, lastActivity: -1 });
+activeChatSchema.index({ menteeId: 1, lastActivity: -1 });
+
 // ─── OTP Schema ───────────────────────────────────────────────────────────────
 // Replaces in-memory Maps so OTPs survive Render restarts/spin-downs.
 // MongoDB automatically deletes documents when `expiresAt` is reached (TTL index).
@@ -156,5 +186,6 @@ const Message      = mongoose.model("Message",       messageSchema);
 const Review       = mongoose.model("Review",        reviewSchema);
 const GroupSession = mongoose.model("GroupSession",  groupSessionSchema);
 const OTP          = mongoose.model("OTP",           otpSchema);
+const ActiveChat   = mongoose.model("ActiveChat",    activeChatSchema);
 
-module.exports = { connectDB, Mentor, Mentee, Session, Chat, Message, Review, GroupSession, OTP };
+module.exports = { connectDB, Mentor, Mentee, Session, Chat, Message, Review, GroupSession, OTP, ActiveChat };
